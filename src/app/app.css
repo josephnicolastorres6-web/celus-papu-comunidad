@@ -1,0 +1,277 @@
+/* IMPORTAMOS LA FUENTE DE LA GUÍA */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+/* ========================================= */
+/* ESTILOS GLOBALES (Fondo Blanco) */
+/* ========================================= */
+.gestor-container {
+  box-sizing: border-box;
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+  background-color: #ffffff; 
+  color: #334155; 
+  padding-bottom: 2rem;
+}
+
+/* ========================================= */
+/* ENCABEZADO (Tu degradado azul insano) */
+/* ========================================= */
+.encabezado-gestor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 90%;
+  max-width: 50rem;
+  margin: 0 auto 2rem auto;
+  text-align: center;
+  background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); 
+  padding: 2rem 1rem;
+  border-bottom-right-radius: 30px; 
+  border-bottom-left-radius: 30px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15); 
+}
+
+.logo-encabezado {
+  width: 4.5rem; 
+  object-fit: contain;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(96, 165, 250, 0.5); 
+}
+
+.encabezado-gestor h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  padding: 0;
+  color: white;
+  text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+}
+
+.encabezado-gestor p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #60a5fa; 
+}
+
+/* ========================================= */
+/* ESTRUCTURA PRINCIPAL (La cuadrícula) */
+/* ========================================= */
+.contenido-principal {
+  width: 90%;
+  max-width: 60rem;
+  margin: 2.5rem auto;
+  display: grid;
+  grid-auto-flow: row;
+  gap: 2rem;
+}
+
+#textoCondicional {
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+  color: #fffbfb; 
+}
+
+#usuarios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column; 
+  gap: 1rem;
+  overflow: auto;
+}
+
+/* ========================================= */
+/* FORMULARIO Y BOTONES (Tarjetas Oscuras) */
+/* ========================================= */
+.panel-formulario {
+  background: #0f172a; 
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.caja-input {
+  margin-bottom: 1.5rem; 
+}
+
+.input-gestor {
+  width: 100%;
+  padding: 1.2rem; 
+  background-color: #1e293b; 
+  color: white;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.input-gestor:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+}
+
+.area-texto {
+  resize: none;
+  height: 100px;
+}
+
+.btn-gestor {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  background-color: #60a5fa; 
+  color: #0f172a; 
+  border: none;
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 800;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.btn-gestor:hover {
+  background-color: #3b82f6;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+  color: white;
+}
+
+/* ========================================= */
+/* TARJETAS DE RESEÑAS (MODO ACORDEÓN) */
+/* ========================================= */
+.tarjeta-resena {
+  display: flex;
+  align-items: flex-start; /* Alineado arriba para que no salte al abrir */
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #1e293b; 
+  color: #e5e7eb;
+  border-radius: 15px;
+  border-left: 4px solid #60a5fa; 
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  cursor: pointer; /* Manito para indicar que es clickeable */
+  position: relative;
+}
+
+.tarjeta-resena:hover {
+  background-color: #0f172a;
+  transform: translateX(5px); 
+  border-left-color: #4dff4d; 
+}
+
+/* --- LOGICA DEL DESPLEGABLE --- */
+.desplegable {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0, 1, 0, 1); /* Efecto suave */
+}
+
+.desplegable.abierto {
+  max-height: 500px; /* Suficiente para textos largos */
+  opacity: 1;
+  margin-top: 10px;
+  transition: all 0.5s ease-in-out;
+}
+
+.avatar-resena {
+  width: 3.5rem; 
+  height: 3.5rem;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #334155;
+}
+
+.info-resena {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.nombre-usuario {
+  font-weight: bold;
+  font-size: 1rem;
+  color: white;
+}
+
+.texto-opinion {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.fecha {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  display: block;
+  margin-top: 5px;
+}
+
+/* Flechita decorativa */
+.flecha-indicador {
+  font-size: 0.7rem;
+  color: #60a5fa;
+  margin-left: auto;
+  transition: transform 0.3s;
+}
+
+.rotada {
+  transform: rotate(180deg);
+}
+
+/* ========================================= */
+/* ESTILOS PARA FORMULARIO PROFESIONAL */
+/* ========================================= */
+.fila-inputs {
+  display: flex;
+  gap: 1.5rem; 
+  margin-bottom: 1.5rem;
+}
+
+.etiqueta-modelo {
+  font-size: 0.75rem;
+  color: #60a5fa;
+  background-color: rgba(96, 165, 250, 0.15);
+  padding: 3px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  font-weight: normal;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+.estrellas {
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+/* ========================================= */
+/* RESPONSIVE DESKTOP Y MÓVIL */
+/* ========================================= */
+@media (min-width: 768px) {
+  .contenido-principal {
+    grid-template-columns: 1fr 1.5fr; 
+    align-items: start;
+  }
+  #textoCondicional {
+    text-align: left;
+  }
+}
+
+@media (max-width: 600px) {
+  .fila-inputs {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}

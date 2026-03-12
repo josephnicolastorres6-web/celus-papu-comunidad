@@ -1,0 +1,89 @@
+<div class="gestor-container">
+  <header class="encabezado-gestor">
+    <div class="logo-circulo">
+      <img src="logo1.jpg" alt="Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/60'">
+    </div>
+    <h1>COMUNIDAD CELUS PAPU</h1>
+    <p>Administrador de Reseñas ADSO</p>
+  </header>
+
+  <main class="layout-dos-columnas">
+    
+    <aside class="columna-usuarios">
+      @for (user of usuariosUnicos(); track user.nombre) {
+        <div class="item-usuario" 
+             [class.activo]="usuarioSeleccionado() === user.nombre"
+             (click)="seleccionarUsuario(user.nombre)">
+          
+          <div class="avatar-wrapper">
+            <img [src]="user.avatar" alt="Avatar" onerror="this.src='avatar3.png';" class="avatar-img">
+          </div>
+          <span class="nombre-lista">{{ user.nombre }}</span>
+        </div>
+      }
+    </aside>
+
+    <section class="columna-contenido">
+      
+      @if (usuarioSeleccionado()) {
+        
+        <div class="cabecera-derecha">
+          <h2>Agregar comentario papu 🗿</h2>
+          <button class="btn-agregar" (click)="toggleFormulario()">Agregar Reseña Nueva</button>
+        </div>
+
+        @if (mostrarFormulario()) {
+          <div class="modal-backdrop" (click)="toggleFormulario()">
+            
+            <div class="modal-caja" (click)="$event.stopPropagation()">
+              <h2>Agregar Reseña</h2>
+
+              <label>Modelo del celular (Título)</label>
+              <input type="text" [(ngModel)]="nuevoModelo" class="input-modal">
+
+              <label>Calificación</label>
+              <select [(ngModel)]="nuevaCalificacion" class="input-modal">
+                <option value="5">⭐⭐⭐⭐⭐ (5 Estrellas)</option>
+                <option value="4">⭐⭐⭐⭐ (4 Estrellas)</option>
+                <option value="3">⭐⭐⭐ (3 Estrellas)</option>
+                <option value="2">⭐⭐ (2 Estrellas)</option>
+                <option value="1">⭐ (1 Estrella)</option>
+              </select>
+
+              <label>Opinión (Resumen)</label>
+              <textarea [(ngModel)]="nuevoTexto" class="input-modal area-modal"></textarea>
+
+              <label>Enlace de producto  (Opcional)</label>
+              <input type="text" [(ngModel)]="nuevoAvatar" class="input-modal">
+
+              <div class="modal-botones">
+                <button class="btn-cancelar" (click)="toggleFormulario()">Cancelar</button>
+                <button class="btn-crear" (click)="publicarComentario()">Crear</button>
+              </div>
+            </div>
+            
+          </div>
+        }
+        <div class="lista-tarjetas-lilas">
+          @for (resena of comentariosDelUsuario(); track resena.id) {
+            <div class="tarjeta-lila">
+              <h3>{{ resena.modelo }}</h3>
+              <span class="estrellas-tarjeta">{{ '⭐'.repeat(resena.estrellas) }}</span>
+              <span class="fecha-tarjeta"> • {{ resena.fecha }}</span>
+              <p class="texto-tarjeta">{{ resena.texto }}</p>
+              <div class="tarjeta-footer">
+                <button class="btn-terminada" (click)="eliminarComentario(resena.id)">Eliminar</button>
+              </div>
+            </div>
+          }
+        </div>
+
+      } @else {
+        <div class="pantalla-vacia">
+          <p>Selecciona un usuario a la izquierda para ver sus reseñas. 🗿</p>
+        </div>
+      }
+
+    </section>
+  </main>
+</div>
