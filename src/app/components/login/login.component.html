@@ -1,0 +1,32 @@
+<div class="login-box">
+  <h2>{{ modoRegistro ? 'Crear Cuenta Papu 📱' : 'Celus Papu Admin 📱' }}</h2>
+
+  <form (submit)="onLogin($event)">
+    <div class="input-group">
+      <label>Usuario</label>
+      <input type="text" name="username" [(ngModel)]="username" required placeholder="Ingresa tu usuario">
+    </div>
+
+    <div class="input-group">
+      <label>Contraseña</label>
+      <input type="password" name="password" [(ngModel)]="password" required placeholder="********">
+    </div>
+
+    <button type="submit">{{ modoRegistro ? 'Registrarme ahora' : 'Iniciar Sesión' }}</button>
+  </form>
+
+  <p *ngIf="error" class="error-msg">{{ error }}</p>
+
+  <div class="opciones-footer">
+    <p class="toggle-text">
+      {{ modoRegistro ? '¿Ya tienes cuenta?' : '¿No tienes cuenta todavía?' }} 
+      <span (click)="toggleModo()" class="span-link">
+        {{ modoRegistro ? 'Inicia sesión' : 'Regístrate aquí' }}
+      </span>
+    </p>
+
+    <hr>
+
+    <a routerLink="/" class="link-invitado">Entrar como invitado 🚶‍♂️</a>
+  </div>
+</div>

@@ -1,0 +1,96 @@
+.login-box {
+  max-width: 350px;
+  margin: 80px auto;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.input-group {
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+label { 
+  display: block; 
+  margin-bottom: 5px; 
+  font-weight: bold; 
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #28a745; /* Tu verde original */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s;
+}
+
+button:hover { 
+  background: #218838; 
+}
+
+.error-msg { 
+  color: #dc3545; 
+  margin-top: 15px; 
+  font-size: 14px; 
+}
+
+/* 👇 NUEVOS ESTILOS PARA EL REGISTRO E INVITADO */
+
+.opciones-footer {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+}
+
+.toggle-text {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.span-link {
+  color: #28a745;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.span-link:hover {
+  color: #1e7e34;
+}
+
+.link-invitado {
+  display: inline-block;
+  margin-top: 10px;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.link-invitado:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 15px 0;
+}

@@ -1,0 +1,73 @@
+<div class="gestor-container">
+  <header class="encabezado-gestor">
+    <div class="logo-circulo" (click)="resetearVista()" style="cursor: pointer;">
+      <img src="logo1.jpg" alt="Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/60'">
+    </div>
+    
+    <div class="titulos-nav-central">
+      <h1>COMUNIDAD CELUS PAPU</h1>
+      
+      <div class="nav-accesos" *ngIf="!authService.isLoggedIn()">
+        <button [routerLink]="['/login']" [queryParams]="{ rol: 'usuario' }" class="btn-nav user-btn">
+          Iniciar Sesión 👤
+        </button>
+        <button [routerLink]="['/login']" [queryParams]="{ rol: 'admin' }" class="btn-nav admin-btn">
+          Iniciar Admin 🔐
+        </button>
+      </div>
+    </div>
+    
+    <button *ngIf="authService.isLoggedIn()" (click)="authService.logout()" class="btn-logout" style="margin-left: 20px;">
+      Salir 🚪
+    </button>
+  </header>
+
+  <main class="layout-dos-columnas">
+    <aside class="columna-usuarios">
+      @for (user of usuariosUnicos(); track user.nombre) {
+        <div class="item-usuario" 
+             [class.activo]="usuarioSeleccionado() === user.nombre" 
+             (click)="seleccionarUsuario(user.nombre)">
+          
+          <div class="avatar-wrapper">
+            <img [src]="user.avatar" alt="Avatar" onerror="this.src='avatar3.png';" class="avatar-img">
+          </div>
+          
+          <span class="nombre-lista">{{ user.nombre }}</span>
+        </div>
+      }
+    </aside>
+
+    <section class="columna-contenido">
+      <div *ngIf="!authService.isLoggedIn()" class="banner-invitado">
+        <p>✨ Estás en modo lectura. Inicia sesión para participar en la comunidad.</p>
+      </div>
+
+      <div class="cabecera-derecha">
+        <h2>Reseñas de {{ usuarioSeleccionado() }} 🗿</h2>
+        
+        <button *ngIf="authService.isAdmin()" 
+                class="btn-agregar" 
+                (click)="toggleFormulario()">
+          {{ mostrarFormulario() ? 'Cerrar' : 'Nueva Reseña' }}
+        </button>
+      </div>
+
+      @if (mostrarFormulario() && authService.isAdmin()) {
+        <app-formulario [nombreUsuario]="usuarioSeleccionado()" (cerrar)="toggleFormulario()" />
+      }
+
+      <div class="lista-tarjetas-lilas">
+        @if (servicio.cargando()) {
+          <div class="skeleton-card" style="background: #eee; height: 100px; margin: 10px; border-radius: 10px; animation: pulse 1.5s infinite;">
+            <p style="padding: 20px;">Cargando reseñas de Papu...</p>
+          </div>
+        } @else {
+          @for (resena of comentariosDelUsuario(); track resena.id) {
+            <app-tarjeta [info]="resena" />
+          }
+        }
+      </div>
+    </section>
+  </main>
+</div>
