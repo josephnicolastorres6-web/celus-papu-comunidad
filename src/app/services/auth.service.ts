@@ -1,14 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
-// 👇 Inyectamos el Router para cumplir con la redirección del punto A.2
 import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000'; 
+  // 👇 CAMBIO CLAVE: Cambiamos localhost por tu link real de Railway
+  private apiUrl = 'https://celus-papu-comunidad-production.up.railway.app'; 
+  
   private http = inject(HttpClient);
   private router = inject(Router);
 
@@ -25,7 +26,6 @@ export class AuthService {
       );
   }
 
-  // 👇 FUNCIÓN DE REGISTRO AÑADIDA PARA CELUS PAPU
   registro(username: string, password: string) {
     return this.http.post<any>(`${this.apiUrl}/registro`, { username, password });
   }
@@ -34,7 +34,6 @@ export class AuthService {
     return localStorage.getItem('token'); 
   }
 
-  // 👇 NUEVA FUNCIÓN: Verifica si el usuario logueado es el admin supremo
   isAdmin(): boolean {
     const token = this.getToken();
     if (!token) return false;
@@ -47,14 +46,11 @@ export class AuthService {
   }
 
   isLoggedIn() { 
-    // Retorna true si existe el token, false si no.
     return !!localStorage.getItem('token'); 
   }
 
-  // ACTUALIZACIÓN REQUERIMIENTO A.2: Borrar y Redirigir
   logout() { 
     localStorage.removeItem('token'); 
-    // Después de borrar el carnet, lo mandamos al login
     this.router.navigate(['/login']);
     console.log('🚪 Sesión cerrada exitosamente en Celus Papu');
   }
