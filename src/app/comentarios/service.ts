@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Comentario } from './model'; 
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -9,8 +10,8 @@ export class ComentariosService {
   // 👇 Inyectamos la herramienta para ir a internet (Punto C.2 de la guía)
   private http = inject(HttpClient);
   
-  // 👇 Apuntamos a tu servidor de Node.js (Configurado con CORS en el backend)
-  private apiUrl = 'http://localhost:3000/comentarios'; 
+  // 👇 Apuntamos a tu servidor de Node.js en Railway a través de los environment
+  private apiUrl = `${environment.apiUrl}/comentarios`; 
 
   private lista = signal<Comentario[]>([]);
   listaComentarios = this.lista.asReadonly();

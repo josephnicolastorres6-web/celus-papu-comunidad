@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // 👇 CAMBIO CLAVE: Cambiamos localhost por tu link real de Railway
-  private apiUrl = 'https://celus-papu-comunidad-production.up.railway.app'; 
+  // 👇 Usamos la url de Railway almacenada en environment.ts
+  private apiUrl = environment.apiUrl; 
   
   private http = inject(HttpClient);
   private router = inject(Router);
