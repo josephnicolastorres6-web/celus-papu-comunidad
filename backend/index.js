@@ -22,12 +22,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Configuración de la conexión a MySQL
+// ==========================================
+// Configuración de la conexión a MySQL (Actualizado para la nube y local)
+// ==========================================
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'celuspapu_db'
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'celuspapu_db',
+    port: process.env.DB_PORT || 3306
 });
 
 // Conectar a la base de datos
@@ -36,7 +39,7 @@ db.connect(err => {
         console.error('Error conectando a MySQL:', err);
         return;
     }
-    console.log('¡Conectado exitosamente a la base de datos MySQL de XAMPP! 🗿🔌');
+    console.log('¡Conectado exitosamente a la base de datos MySQL! 🗿🔌');
 });
 
 // ==========================================
@@ -202,6 +205,10 @@ app.delete('/comentarios/:id', verificarToken, soloAdminSupremo, (req, res) => {
     });
 });
 
-app.listen(3000, () => {
-    console.log('Servidor corriendo en http://localhost:3000');
+// ==========================================
+// Iniciar el servidor (Actualizado para el puerto dinámico de Railway)
+// ==========================================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
 });
