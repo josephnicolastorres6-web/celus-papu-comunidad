@@ -13,8 +13,8 @@ const app = express();
 // CONFIGURACIÓN DE CORS (Requerimiento B.1)
 // ==========================================
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'http://localhost:4200',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+    origin: [process.env.FRONTEND_URL, 'https://celus-papu-comunidad-633mozfza.vercel.app', 'http://localhost:4200'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
     allowedHeaders: ['Content-Type', 'Authorization'] 
 };
 
