@@ -12,15 +12,21 @@ const app = express();
 // ==========================================
 // CONFIGURACIÓN DE CORS (Requerimiento B.1)
 // ==========================================
-const corsOptions = {
-    origin: ['https://celus-papu-comunidad-633mozfza.vercel.app', 'http://localhost:4200'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
-    allowedHeaders: ['Content-Type', 'Authorization'] 
-};
+app.use(cors({
+  origin: ['https://celus-papu-comunidad-633mozfza.vercel.app', 'http://localhost:4200'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
-// Middlewares
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// Manejo manual de preflight para evitar crash en Express v5
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
+
 app.use(express.json());
 
 // ==========================================
