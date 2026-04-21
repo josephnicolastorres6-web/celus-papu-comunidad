@@ -61,9 +61,9 @@ const inicializarAdmin = () => {
             try {
                 const salt = await bcrypt.genSalt(10);
                 const hashedPassword = await bcrypt.hash('admin123', salt);
-                // Incluimos el rol en la siembra si tu tabla tiene esa columna
-                const insertQuery = 'INSERT INTO administradores (username, password, rol) VALUES (?, ?, ?)';
-                db.query(insertQuery, ['admin', hashedPassword, 'admin'], (err, result) => {
+                // Removido 'rol' porque la tabla MySQL no tiene esa columna
+                const insertQuery = 'INSERT INTO administradores (username, password) VALUES (?, ?)';
+                db.query(insertQuery, ['admin', hashedPassword], (err, result) => {
                     if (!err) console.log('🛡️ Siembra Automática: Administrador inicial (admin) creado exitosamente.');
                 });
             } catch (error) {
@@ -91,10 +91,10 @@ app.post('/registro', async (req, res) => {
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        // Por defecto, los nuevos registros son rol 'usuario'
-        const insertQuery = 'INSERT INTO administradores (username, password, rol) VALUES (?, ?, ?)';
+        // La base de datos no tiene columna rol, insertamos solo credenciales
+        const insertQuery = 'INSERT INTO administradores (username, password) VALUES (?, ?)';
         
-        db.query(insertQuery, [username, hashedPassword, 'usuario'], (err, result) => {
+        db.query(insertQuery, [username, hashedPassword], (err, result) => {
             if (err) {
                 console.error('❌ Error crítico en registro (Base de datos MySQL):', err);
                 return res.status(500).json({ error: 'Error al registrar el usuario en MySQL' });
@@ -182,8 +182,8 @@ app.post('/administradores', verificarToken, soloAdminSupremo, (req, res) => {
         try {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            const insertQuery = 'INSERT INTO administradores (username, password, rol) VALUES (?, ?, ?)';
-            db.query(insertQuery, [username, hashedPassword, rol || 'usuario'], (err, result) => {
+            const insertQuery = 'INSERT INTO administradores (username, password) VALUES (?, ?)';
+            db.query(insertQuery, [username, hashedPassword], (err, result) => {
                 if (err) return res.status(500).json({ error: 'Error al crear el administrador' });
                 res.status(201).json({ message: 'Nuevo administrador creado con éxito', id: result.insertId });
             });
