@@ -60,7 +60,7 @@
           <label>Nombre del Usuario</label>
           <input type="text" 
                  [ngModel]="formUsuario().nombre" 
-                 (ngModelChange)="formUsuario.update(u => { u.nombre = $event; return u })" 
+                 (ngModelChange)="formUsuario.update(u => ({ ...u, nombre: $event }))" 
                  class="glass-input" 
                  placeholder="Ej: Papu Supremo">
         </div>
@@ -69,7 +69,7 @@
           <label>Rol Asignado</label>
           <div class="custom-select-wrapper">
              <select [ngModel]="formUsuario().rol" 
-                     (ngModelChange)="formUsuario.update(u => { u.rol = $event; return u })" 
+                     (ngModelChange)="formUsuario.update(u => ({ ...u, rol: $event }))" 
                      class="glass-input glass-select">
                <option value="Usuario">Usuario (Estándar)</option>
                <option value="VIP">VIP</option>
