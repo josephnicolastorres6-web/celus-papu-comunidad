@@ -81,6 +81,13 @@ inicializarAdmin();
 // ==========================================
 app.post('/registro', async (req, res) => {
     const { username, password } = req.body;
+
+    // Validación para evitar crasheos si el body llega vacío
+    if (!username || !password) {
+        console.error('❌ Error crítico en registro: Faltan credenciales en la petición (username o password vacíos).', req.body);
+        return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
+    }
+
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -88,10 +95,14 @@ app.post('/registro', async (req, res) => {
         const insertQuery = 'INSERT INTO administradores (username, password, rol) VALUES (?, ?, ?)';
         
         db.query(insertQuery, [username, hashedPassword, 'usuario'], (err, result) => {
-            if (err) return res.status(500).json({ error: 'Error al registrar el usuario' });
+            if (err) {
+                console.error('❌ Error crítico en registro (Base de datos MySQL):', err);
+                return res.status(500).json({ error: 'Error al registrar el usuario en MySQL' });
+            }
             res.status(201).json({ message: '¡Usuario creado con éxito! 🚀' });
         });
     } catch (error) {
+        console.error('❌ Error crítico en registro (Procesamiento/Bcrypt):', error);
         res.status(500).json({ error: 'Error al procesar el registro' });
     }
 });
