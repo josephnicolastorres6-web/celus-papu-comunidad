@@ -13,10 +13,10 @@ const app = express();
 // CONFIGURACIÓN DE CORS (Requerimiento B.1)
 // ==========================================
 app.use(cors({
-  origin: ['https://celus-papu-comunidad-633mozfza.vercel.app', 'http://localhost:4200'],
+  origin: true,
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Manejo manual de preflight para evitar crash en Express v5
@@ -215,7 +215,5 @@ app.delete('/comentarios/:id', verificarToken, soloAdminSupremo, (req, res) => {
 // ==========================================
 // Iniciar el servidor (Actualizado para el puerto dinámico de Railway)
 // ==========================================
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
-});
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
