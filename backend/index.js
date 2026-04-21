@@ -5,7 +5,7 @@ const cors = require('cors');
 const mysql = require('mysql2');
 
 // Tu clave secreta para los tokens
-const SECRET_KEY = 'cocacola03';
+const SECRET_KEY = process.env.JWT_SECRET || 'cocacola03';
 
 const app = express();
 
@@ -169,8 +169,36 @@ const soloAdminSupremo = (req, res, next) => {
 };
 
 // ==========================================
-// RUTAS DE ADMINISTRADORES
+// RUTAS DE ADMINISTRADORES / DASHBOARD
 // ==========================================
+
+// GET: Listar todos los usuarios para el Dashboard
+app.get('/usuarios', verificarToken, (req, res) => {
+    const query = 'SELECT id, username FROM administradores ORDER BY id DESC';
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: 'Error al obtener usuarios' });
+        
+        // Mapeamos los resultados para emparejar la estructura que espera tu Dashboard de Angular
+        const usuariosFormateados = results.map(u => ({
+            id: u.id,
+            nombre: u.username,
+            rol: 'Usuario', // Simulamos el rol ya que lo eliminamos de la BD
+            fecha: new Date().toISOString().split('T')[0] // Fecha simulada temporal
+        }));
+        
+        res.json(usuariosFormateados);
+    });
+});
+
+// DELETE: Eliminar un usuario desde el Dashboard
+app.delete('/usuarios/:id', verificarToken, (req, res) => {
+    const { id } = req.params;
+    const query = 'DELETE FROM administradores WHERE id = ?';
+    db.query(query, [id], (err, result) => {
+        if (err) return res.status(500).json({ error: 'Error al eliminar usuario' });
+        res.json({ message: 'Usuario eliminado exitosamente' });
+    });
+});
 
 app.post('/administradores', verificarToken, soloAdminSupremo, (req, res) => {
     const { username, password, rol } = req.body;
