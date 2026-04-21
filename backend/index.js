@@ -216,4 +216,6 @@ app.delete('/comentarios/:id', verificarToken, soloAdminSupremo, (req, res) => {
 // Iniciar el servidor (Actualizado para el puerto dinámico de Railway)
 // ==========================================
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor corriendo en el puerto ${PORT} (0.0.0.0)`);
+});
