@@ -43,7 +43,10 @@
               <p class="prod-specs">{{ prod.especificaciones }}</p>
               <div class="prod-footer">
                 <span class="prod-price">${{ prod.precio }}</span>
-                <button class="btn-buy neon-btn" (click)="carritoService.agregarItem(prod)">Añadir 🛒</button>
+                <div>
+                  <button class="btn-buy neon-btn" [routerLink]="['/producto', prod.id]" style="margin-right: 10px;">Ver Detalles</button>
+                  <button class="btn-buy" style="border-color: #10b981; color: #10b981;" (click)="carritoService.agregarItem(prod)">Añadir 🛒</button>
+                </div>
               </div>
             </div>
           </div>

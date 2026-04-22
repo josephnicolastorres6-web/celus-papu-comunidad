@@ -1,0 +1,85 @@
+<div class="detalle-container">
+  <!-- Cabecera de Retorno -->
+  <div class="detalle-header">
+    <button class="btn-volver" routerLink="/">⬅ Volver al Catálogo</button>
+  </div>
+
+  @if (cargando()) {
+    <div class="loader-container">
+      <span class="loader"></span>
+    </div>
+  } @else if (productoActual()) {
+    <div class="glass-inspector-card">
+      <div class="inspector-image-wrapper">
+        <!-- Imagen del Producto -->
+        <img [src]="productoActual()?.imagen_url" alt="{{ productoActual()?.nombre }}" class="inspector-img">
+      </div>
+      
+      <div class="inspector-info">
+        <!-- Detalles Clave -->
+        <span class="inspector-marca">{{ productoActual()?.marca }}</span>
+        <h1 class="inspector-name">{{ productoActual()?.nombre }}</h1>
+        <p class="inspector-price">${{ productoActual()?.precio | number:'1.2-2' }}</p>
+
+        <!-- Bloque Analítico -->
+        <div class="inspector-specs-box">
+          <h3>🔧 Especificaciones Técnicas</h3>
+          <p>{{ productoActual()?.especificaciones }}</p>
+        </div>
+
+        <!-- Call to Action Gigante -->
+        <button class="btn-add-giant" (click)="carritoService.agregarItem(productoActual()!)">
+          🛍️ Añadir al Carrito
+        </button>
+      </div>
+    </div>
+  } @else {
+    <div class="glass-inspector-card" style="padding: 3rem; text-align: center;">
+      <h2 style="color: #ff3366;">❌ Producto no encontrado o extraído de la Bóveda.</h2>
+    </div>
+  }
+
+  <!-- Incluye también lateral del Carrito Global -->
+  @if (carritoService.panelVisible()) {
+    <div class="cart-overlay" (click)="carritoService.togglePanel()">
+      <div class="cart-panel" (click)="$event.stopPropagation()">
+        
+        <div class="cart-header">
+          <h2>Tus Compras 🛒</h2>
+          <button class="btn-cerrar-cart" (click)="carritoService.togglePanel()">✖</button>
+        </div>
+  
+        <div class="cart-body">
+          @if (carritoService.items().length === 0) {
+            <div class="cart-empty">
+              <p>El carrito está vacío. ¡Explora nuestros equipos de Alta Gama!</p>
+            </div>
+          } @else {
+            <div class="cart-items-list">
+              @for (item of carritoService.items(); track item.id) {
+                <div class="cart-item-card glass-card">
+                  <div class="cart-item-info">
+                    <h4>{{ item.nombre }}</h4>
+                    <p class="cart-item-price">${{ item.precio | number:'1.2-2' }} x {{ item.cantidad }}</p>
+                  </div>
+                  <button class="btn-delete-item" (click)="carritoService.quitarItem(item.id)">🗑️</button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+  
+        <div class="cart-footer">
+          <div class="cart-total-row">
+            <span>Total a pagar:</span>
+            <span class="total-price">${{ carritoService.total() | number:'1.2-2' }}</span>
+          </div>
+          <button class="btn-checkout neon-btn" (click)="carritoService.comprar()">
+            💳 Proceder al Pago
+          </button>
+        </div>
+  
+      </div>
+    </div>
+    }
+</div>

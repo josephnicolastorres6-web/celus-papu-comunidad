@@ -1,0 +1,202 @@
+/* =========================================
+   DISEÑO DARK MINIMALIST DEL INSPECTOR
+   ========================================= */
+.detalle-container {
+  min-height: 100vh;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.detalle-header {
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+}
+
+.btn-volver {
+  background: transparent;
+  border: 1px solid #333;
+  color: #e2e8f0;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+.btn-volver:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #00f3ff;
+  border-color: #00f3ff;
+}
+
+.glass-inspector-card {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid #333333;
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  transition: border-color 0.3s;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.inspector-image-wrapper {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.inspector-img {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+.inspector-info {
+  flex: 1;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.inspector-marca {
+  font-size: 1rem;
+  color: var(--neon-cyan, #00f3ff);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 5px;
+}
+
+.inspector-name {
+  margin: 0 0 15px 0;
+  font-size: 2.5rem;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  line-height: 1.1;
+}
+
+.inspector-price {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #10b981;
+  margin: 0 0 2rem 0;
+  text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.inspector-specs-box {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.inspector-specs-box h3 {
+  margin: 0 0 10px 0;
+  color: #94a3b8;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.inspector-specs-box p {
+  margin: 0;
+  color: #e2e8f0;
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+
+.btn-add-giant {
+  padding: 18px 24px;
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.3s;
+  border: 2px solid #10b981;
+  color: #10b981;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: auto;
+}
+
+.btn-add-giant:hover {
+  background: #10b981;
+  color: #0b0f19;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+/* Reusing Carrito CSS directly since components are standalone */
+.cart-overlay {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+  display: flex; justify-content: flex-end; z-index: 9999; animation: fadeIn 0.3s forwards;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.cart-panel {
+  width: 400px; height: 100vh; background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(15px); border-left: 1px solid #333;
+  display: flex; flex-direction: column; animation: slideInRight 0.3s forwards;
+}
+
+@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.cart-header { padding: 1.5rem; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+.cart-header h2 { margin: 0; color: #00f3ff; font-family: 'Space Grotesk', sans-serif; font-size: 1.5rem; }
+.btn-cerrar-cart { background: transparent; color: #fff; border: none; font-size: 1.5rem; cursor: pointer; transition: color 0.3s; }
+.btn-cerrar-cart:hover { color: #ff3366; }
+.cart-body { flex: 1; padding: 1.5rem; overflow-y: auto; }
+.cart-empty { text-align: center; color: #94a3b8; margin-top: 2rem; line-height: 1.5; }
+.cart-items-list { display: flex; flex-direction: column; gap: 15px; }
+.cart-item-card { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid #333; border-radius: 12px; }
+.cart-item-info h4 { margin: 0 0 5px 0; font-size: 1rem; color: #fff; }
+.cart-item-price { margin: 0; font-size: 0.9rem; color: #00f3ff; font-weight: 600; }
+.btn-delete-item { background: transparent; color: #ff3366; border: 1px solid rgba(255, 51, 102, 0.3); width: 32px; height: 32px; border-radius: 5px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: all 0.3s; }
+.btn-delete-item:hover { background: rgba(255, 51, 102, 0.1); border-color: #ff3366; }
+.cart-footer { padding: 1.5rem; border-top: 1px solid #333; background: rgba(0, 0, 0, 0.2); }
+.cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.cart-total-row span { font-size: 1.2rem; color: #94a3b8; }
+.cart-total-row .total-price { font-size: 1.6rem; font-weight: 700; color: #00f3ff; }
+.btn-checkout { width: 100%; padding: 15px; font-size: 1.1rem; background: rgba(0, 243, 255, 0.05); border: 1px solid #00f3ff; color: #00f3ff; border-radius: 12px; cursor: pointer; transition: all 0.3s; }
+.btn-checkout:hover { background: #00f3ff; color: #0b0f19; }
+
+/* Loader */
+.loader-container { display: flex; justify-content: center; align-items: center; padding: 5rem; }
+.loader { border: 4px solid #333; border-top: 4px solid #00f3ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .glass-inspector-card {
+    flex-direction: column;
+  }
+  .inspector-image-wrapper {
+    padding: 2rem;
+  }
+  .inspector-info {
+    padding: 2rem;
+  }
+  .inspector-name {
+    font-size: 2rem;
+  }
+  .inspector-price {
+    font-size: 2.5rem;
+  }
+}

@@ -298,6 +298,18 @@ app.get('/productos', (req, res) => {
     });
 });
 
+app.get('/productos/:id', (req, res) => {
+    const query = 'SELECT * FROM productos WHERE id = ?';
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) {
+            console.error('Error obtener detalle producto:', err);
+            return res.status(500).json({ error: 'Error al obtener producto individual' });
+        }
+        if (results.length === 0) return res.status(404).json({ error: 'Producto no encontrado' });
+        res.json(results[0]);
+    });
+});
+
 // ==========================================
 // Iniciar el servidor (Actualizado para el puerto dinámico de Railway)
 // ==========================================
