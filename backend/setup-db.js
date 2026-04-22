@@ -61,13 +61,30 @@ async function setupDatabase() {
       (3, 'Katana 15', 'MSI', 1100.50, 'Intel i7, RTX 4060, 16GB RAM, 144Hz FHD', 'https://m.media-amazon.com/images/I/81rM5O0MmeL._AC_SX679_.jpg')
     `);
 
+    // 1. CREAR LA TABLA DE USUARIOS PRIMERO
+    console.log('👥  Diseñando la tabla de "usuarios" (Clientes VIP)...');
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        avatar VARCHAR(255) DEFAULT 'assets/avatars/ninja.svg',
+        direccion VARCHAR(255),
+        ciudad VARCHAR(100)
+      )
+    `);
+
+    // 2. REEMPLAZAR LA BÓVEDA DE PEDIDOS CON LA LLAVE FORÁNEA
     console.log('📦  Diseñando la Bóveda de Pedidos (La Caja Fuerte)...');
     await db.execute(`
       CREATE TABLE IF NOT EXISTS pedidos (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario_id INT,
         fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         total DECIMAL(10,2) NOT NULL,
-        estado VARCHAR(50) DEFAULT 'pendiente'
+        estado VARCHAR(50) DEFAULT 'pendiente',
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
       )
     `);
 
