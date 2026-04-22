@@ -10,13 +10,13 @@ const SECRET_KEY = process.env.JWT_SECRET || 'cocacola03';
 const app = express();
 
 // ==========================================
-// CONFIGURACIÓN DE CORS (Requerimiento B.1)
+// CONFIGURACIÓN DE CORS (CORREGIDO PARA VERCEL)
 // ==========================================
 app.use(cors({
-  origin: true,
-  credentials: true,
+  origin: 'https://celus-papu-comunidad.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 // Manejo manual de preflight para evitar crash en Express v5
@@ -61,7 +61,6 @@ const inicializarAdmin = () => {
             try {
                 const salt = await bcrypt.genSalt(10);
                 const hashedPassword = await bcrypt.hash('admin123', salt);
-                // Removido 'rol' porque la tabla MySQL no tiene esa columna
                 const insertQuery = 'INSERT INTO administradores (username, password) VALUES (?, ?)';
                 db.query(insertQuery, ['admin', hashedPassword], (err, result) => {
                     if (!err) console.log('🛡️ Siembra Automática: Administrador inicial (admin) creado exitosamente.');
@@ -82,28 +81,25 @@ inicializarAdmin();
 app.post('/registro', async (req, res) => {
     const { username, password } = req.body;
 
-    // Validación para evitar crasheos si el body llega vacío
     if (!username || !password) {
-        console.error('❌ Error crítico en registro: Faltan credenciales en la petición (username o password vacíos).', req.body);
         return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
     }
 
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        // La base de datos no tiene columna rol, insertamos solo credenciales
         const insertQuery = 'INSERT INTO administradores (username, password) VALUES (?, ?)';
         
         db.query(insertQuery, [username, hashedPassword], (err, result) => {
             if (err) {
-                console.error('❌ Error crítico en registro (Base de datos MySQL):', err);
-                return res.status(500).json({ error: 'Error al registrar el usuario en MySQL' });
+                console.error('❌ Error crítico en registro:', err);
+                return res.status(500).json({ error: 'Error al registrar el usuario en la base de datos' });
             }
             res.status(201).json({ message: '¡Usuario creado con éxito! 🚀' });
         });
     } catch (error) {
-        console.error('❌ Error crítico en registro (Procesamiento/Bcrypt):', error);
-        res.status(500).json({ error: 'Error al procesar el registro' });
+        console.error('❌ Error al procesar registro:', error);
+        res.status(500).json({ error: 'Error interno al procesar el registro' });
     }
 });
 
@@ -116,23 +112,21 @@ app.post('/login', (req, res) => {
     
     db.query(query, [username], async (err, results) => {
         if (err) return res.status(500).json({ error: 'Error en la base de datos' });
-        if (results.length === 0) return res.status(401).json({ error: 'Usuario no encontrado' });
+        if (results.length === 0) return res.status(401).json({ error: 'El usuario no existe' });
 
         const admin = results[0];
         const passwordValida = await bcrypt.compare(password, admin.password);
 
         if (!passwordValida) return res.status(401).json({ error: 'Contraseña incorrecta' });
 
-        // Guardamos el rol en el token
         const token = jwt.sign(
             { id: admin.id, username: admin.username, role: admin.rol || 'usuario' }, 
             SECRET_KEY, 
             { expiresIn: '2h' }
         );
 
-        // Enviamos el token Y el rol al frontend
         res.json({ 
-            message: 'Login exitoso', 
+            message: 'Inicio de sesión exitoso', 
             token: token,
             role: admin.rol || 'usuario' 
         });
@@ -146,7 +140,7 @@ app.post('/api/usuarios/registro', async (req, res) => {
     const { nombre, email, password, direccion, ciudad, avatar } = req.body;
     
     if (!nombre || !email || !password) {
-        return res.status(400).json({ error: 'Nombre, Email y Password son obligatorios.' });
+        return res.status(400).json({ error: 'Nombre, correo y contraseña son obligatorios.' });
     }
 
     try {
@@ -157,13 +151,14 @@ app.post('/api/usuarios/registro', async (req, res) => {
         const query = 'INSERT INTO usuarios (nombre, email, password, direccion, ciudad, avatar) VALUES (?, ?, ?, ?, ?, ?)';
         db.query(query, [nombre, email, hashedPassword, direccion, ciudad, avatarDefault], (err, result) => {
             if (err) {
-                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Ese correo ya está registrado.' });
-                return res.status(500).json({ error: 'Error al registrar cliente.' });
+                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Este correo electrónico ya está registrado.' });
+                return res.status(500).json({ error: 'Error al registrar el cliente en la base de datos.' });
             }
-            res.status(201).json({ message: 'Registro exitoso.', id: result.insertId });
+            res.status(201).json({ message: 'Registro de cliente exitoso.', id: result.insertId });
         });
     } catch (e) {
-        res.status(500).json({ error: 'Error del servidor.' });
+        console.error('Error en registro cliente:', e);
+        res.status(500).json({ error: 'Error interno del servidor al procesar el registro.' });
     }
 });
 
@@ -172,11 +167,12 @@ app.post('/api/usuarios/login', (req, res) => {
     const query = 'SELECT * FROM usuarios WHERE email = ?';
 
     db.query(query, [email], async (err, results) => {
-        if (err || results.length === 0) return res.status(401).json({ error: 'Credenciales inválidas.' });
+        if (err) return res.status(500).json({ error: 'Error en la base de datos al buscar usuario.' });
+        if (results.length === 0) return res.status(401).json({ error: 'Credenciales de acceso inválidas.' });
 
         const usuario = results[0];
         const valida = await bcrypt.compare(password, usuario.password);
-        if (!valida) return res.status(401).json({ error: 'Credenciales inválidas.' });
+        if (!valida) return res.status(401).json({ error: 'Credenciales de acceso inválidas.' });
 
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, email: usuario.email, avatar: usuario.avatar, role: 'cliente' },
@@ -184,7 +180,6 @@ app.post('/api/usuarios/login', (req, res) => {
             { expiresIn: '24h' }
         );
 
-        // ACTUALIZAR ÚLTIMA CONEXIÓN
         db.query('UPDATE usuarios SET ultima_conexion = CURRENT_TIMESTAMP WHERE id = ?', [usuario.id]);
 
         res.json({ 
@@ -203,25 +198,23 @@ const verificarToken = (req, res, next) => {
     const authHeader = req.header('Authorization');
     
     if (!authHeader) {
-        return res.status(401).json({ error: '¡Alto ahí! Acceso denegado. Necesitas iniciar sesión.' });
+        return res.status(401).json({ error: '¡Acceso denegado! Necesitas una sesión activa.' });
     }
 
     const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
 
     try {
         const verificado = jwt.verify(token, SECRET_KEY);
-        // Inyectamos el payload verificado en req.user (para admin o cliente)
         req.user = verificado; 
         next();
     } catch (error) {
-        res.status(401).json({ error: 'Tu sesión es inválida o ya expiró.' });
+        res.status(401).json({ error: 'Tu sesión ha expirado o es inválida.' });
     }
 };
 
 const soloAdminSupremo = (req, res, next) => {
-    // Verificamos si es el usuario 'admin' o si tiene el rol 'admin'
     if (req.user.username !== 'admin' && req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'No tienes permisos de Jefe. Solo el Admin Supremo puede hacer esto.' });
+        return res.status(403).json({ error: 'Permisos insuficientes. Solo el Administrador puede realizar esta acción.' });
     }
     next();
 };
@@ -230,47 +223,43 @@ const soloAdminSupremo = (req, res, next) => {
 // RUTAS DE ADMINISTRADORES / DASHBOARD
 // ==========================================
 
-// GET: Listar todos los usuarios para el Dashboard
 app.get('/usuarios', verificarToken, (req, res) => {
     const query = 'SELECT id, username, avatar FROM administradores ORDER BY id DESC';
     db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error al obtener usuarios' });
+        if (err) return res.status(500).json({ error: 'Error al obtener la lista de usuarios' });
         
-        // Mapeamos los resultados para emparejar la estructura que espera tu Dashboard de Angular
         const usuariosFormateados = results.map(u => ({
             id: u.id,
             nombre: u.username,
-            avatar: u.avatar || 'assets/avatars/avatar1.svg', // Fallback anti-crasheo
-            rol: 'Usuario', // Simulamos el rol ya que lo eliminamos de la BD
-            fecha: new Date().toISOString().split('T')[0] // Fecha simulada temporal
+            avatar: u.avatar || 'assets/avatars/avatar1.svg',
+            rol: 'Usuario',
+            fecha: new Date().toISOString().split('T')[0]
         }));
         
         res.json(usuariosFormateados);
     });
 });
 
-// PUT: Actualizar usuario (RF05: Actualizar nombre y avatar)
 app.put('/usuarios/:id', verificarToken, async (req, res) => {
     const { id } = req.params;
     const { username, avatar } = req.body;
     try {
         const updateQuery = 'UPDATE administradores SET username = ?, avatar = ? WHERE id = ?';
         db.query(updateQuery, [username, avatar, id], (err, result) => {
-            if (err) return res.status(500).json({ error: 'Error al actualizar usuario' });
-            res.json({ message: 'Usuario actualizado exitosamente' });
+            if (err) return res.status(500).json({ error: 'Error al actualizar el usuario' });
+            res.json({ message: 'Usuario actualizado correctamente' });
         });
     } catch (error) {
-        res.status(500).json({ error: 'Error interno' });
+        res.status(500).json({ error: 'Error interno al intentar actualizar' });
     }
 });
 
-// DELETE: Eliminar un administrador desde el Dashboard
 app.delete('/usuarios/:id', verificarToken, (req, res) => {
     const { id } = req.params;
     const query = 'DELETE FROM administradores WHERE id = ?';
     db.query(query, [id], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error al eliminar administrador' });
-        res.json({ message: 'Administrador eliminado exitosamente' });
+        if (err) return res.status(500).json({ error: 'Error al eliminar el administrador' });
+        res.json({ message: 'Administrador eliminado con éxito' });
     });
 });
 
@@ -278,73 +267,66 @@ app.delete('/usuarios/:id', verificarToken, (req, res) => {
 // CRUD ADMINISTRATIVO DE CLIENTES (USUARIOS)
 // ==========================================
 
-// GET: Listar todos los clientes registrados
 app.get('/admin/usuarios', verificarToken, (req, res) => {
     const query = 'SELECT id, nombre, email, avatar, direccion, ciudad FROM usuarios ORDER BY id DESC';
     db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error obteniendo lista de clientes.' });
+        if (err) return res.status(500).json({ error: 'Error al obtener la lista de clientes registrados.' });
         res.json(results);
     });
 });
 
-// POST: Crear cliente manualmente
 app.post('/admin/usuarios', verificarToken, async (req, res) => {
     const { nombre, email, avatar } = req.body;
     try {
         const salt = await bcrypt.genSalt(10);
-        // Generamos una contraseña genérica para creación manual
         const hashedPassword = await bcrypt.hash('papu123456', salt);
         const query = 'INSERT INTO usuarios (nombre, email, password, avatar) VALUES (?, ?, ?, ?)';
         
         db.query(query, [nombre, email, hashedPassword, avatar || 'assets/avatars/ninja.svg'], (err, result) => {
-            if (err) return res.status(500).json({ error: 'Error al crear el cliente manualmente.' });
+            if (err) return res.status(500).json({ error: 'Error al crear el cliente de forma manual.' });
             res.status(201).json({ id: result.insertId, nombre, email, avatar: avatar || 'assets/avatars/ninja.svg' });
         });
     } catch (e) {
-        res.status(500).json({ error: 'Error en procesamiento.' });
+        res.status(500).json({ error: 'Error interno al procesar el alta de cliente.' });
     }
 });
 
-// PUT: Actualizar cliente (Nombre y Avatar)
 app.put('/admin/usuarios/:id', verificarToken, (req, res) => {
     const { id } = req.params;
     const { nombre, avatar } = req.body;
     const query = 'UPDATE usuarios SET nombre = ?, avatar = ? WHERE id = ?';
     db.query(query, [nombre, avatar, id], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error al actualizar el perfil del cliente.' });
-        res.json({ message: 'Cliente actualizado correctamente.' });
+        if (err) return res.status(500).json({ error: 'Error al actualizar los datos del cliente.' });
+        res.json({ message: 'Perfil de cliente actualizado con éxito.' });
     });
 });
 
-// DELETE: Eliminar cliente
 app.delete('/admin/usuarios/:id', verificarToken, soloAdminSupremo, (req, res) => {
     const { id } = req.params;
     const query = 'DELETE FROM usuarios WHERE id = ?';
     db.query(query, [id], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error al eliminar el cliente.' });
-        res.json({ message: 'Cliente eliminado de la base de datos.' });
+        if (err) return res.status(500).json({ error: 'Error al eliminar al cliente de la base de datos.' });
+        res.json({ message: 'Cliente eliminado definitivamente.' });
     });
 });
 
-// NUEVO: Registrar administrador desde otro administrador
 app.post('/api/admin/registrar', verificarToken, soloAdminSupremo, async (req, res) => {
     const { username, password, avatar } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Faltan datos.' });
+    if (!username || !password) return res.status(400).json({ error: 'Faltan datos obligatorios para el registro.' });
 
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const insertQuery = 'INSERT INTO administradores (username, password, avatar) VALUES (?, ?, ?)';
         db.query(insertQuery, [username, hashedPassword, avatar || 'assets/avatars/avatar1.svg'], (err) => {
-            if (err) return res.status(500).json({ error: 'Error al registrar administrador.' });
-            res.status(201).json({ message: 'Administrador registrado con éxito.' });
+            if (err) return res.status(500).json({ error: 'Error al registrar el nuevo administrador.' });
+            res.status(201).json({ message: 'Nuevo administrador registrado con éxito.' });
         });
     } catch (e) {
-        res.status(500).json({ error: 'Error interno.' });
+        res.status(500).json({ error: 'Error interno del sistema.' });
     }
 });
 
-// NUEVO: Perfil de usuario (Editar nombre y avatar)
 app.put('/api/usuario/perfil', verificarToken, (req, res) => {
     const { nombre, avatar } = req.body;
     const id = req.user.id;
@@ -353,19 +335,18 @@ app.put('/api/usuario/perfil', verificarToken, (req, res) => {
     if (isClient) {
         const query = 'UPDATE usuarios SET nombre = ?, avatar = ? WHERE id = ?';
         db.query(query, [nombre, avatar, id], (err) => {
-            if (err) return res.status(500).json({ error: 'Error al actualizar perfil.' });
-            res.json({ message: 'Perfil actualizado.' });
+            if (err) return res.status(500).json({ error: 'Error al actualizar tu perfil personal.' });
+            res.json({ message: 'Perfil actualizado correctamente.' });
         });
     } else {
         const query = 'UPDATE administradores SET username = ?, avatar = ? WHERE id = ?';
         db.query(query, [nombre, avatar, id], (err) => {
-            if (err) return res.status(500).json({ error: 'Error al actualizar perfil admin.' });
-            res.json({ message: 'Perfil admin actualizado.' });
+            if (err) return res.status(500).json({ error: 'Error al actualizar el perfil de administrador.' });
+            res.json({ message: 'Perfil administrativo actualizado.' });
         });
     }
 });
 
-// NUEVO: Lista de miembros para el Sidebar con status
 app.get('/api/miembros', (req, res) => {
     const query = `
         SELECT id, nombre as username, avatar, ultima_conexion, 'cliente' as rol FROM usuarios
@@ -374,7 +355,7 @@ app.get('/api/miembros', (req, res) => {
         ORDER BY ultima_conexion DESC
     `;
     db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error al obtener miembros.' });
+        if (err) return res.status(500).json({ error: 'Error al obtener la lista de miembros.' });
         res.json(results);
     });
 });
@@ -383,22 +364,20 @@ app.post('/administradores', verificarToken, soloAdminSupremo, (req, res) => {
     const { username, password, rol } = req.body;
     const checkQuery = 'SELECT * FROM administradores WHERE username = ?';
     db.query(checkQuery, [username], async (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error en la base de datos' });
-        if (results.length > 0) return res.status(400).json({ error: 'Ese nombre de usuario ya existe' });
+        if (err) return res.status(500).json({ error: 'Error al verificar disponibilidad de usuario.' });
+        if (results.length > 0) return res.status(400).json({ error: 'El nombre de usuario ya se encuentra registrado.' });
 
         try {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            
-            // RF03: Permitiendo inyección de avatar en creación
             const avatarInyectado = req.body.avatar || 'assets/avatars/avatar1.svg';
             const insertQuery = 'INSERT INTO administradores (username, password, avatar) VALUES (?, ?, ?)';
             db.query(insertQuery, [username, hashedPassword, avatarInyectado], (err, result) => {
-                if (err) return res.status(500).json({ error: 'Error al crear el administrador' });
-                res.status(201).json({ message: 'Nuevo administrador creado con éxito', id: result.insertId });
+                if (err) return res.status(500).json({ error: 'Error al crear el nuevo administrador.' });
+                res.status(201).json({ message: 'Administrador creado con éxito.', id: result.insertId });
             });
         } catch (error) {
-            res.status(500).json({ error: 'Error al procesar la contraseña' });
+            res.status(500).json({ error: 'Error interno al procesar la seguridad de la cuenta.' });
         }
     });
 });
@@ -430,7 +409,7 @@ app.get('/comentarios', verificarToken, (req, res) => {
     db.query(query, (err, results) => {
         if (err) {
             console.error('Error JOIN muro:', err);
-            return res.status(500).json({ error: 'Error al obtener el muro de comentarios' });
+            return res.status(500).json({ error: 'Error al obtener los comentarios de la comunidad' });
         }
         res.json(results);
     });
@@ -453,8 +432,8 @@ app.post('/comentarios', verificarToken, (req, res) => {
     }
 
     db.query(query, params, (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error creando comentario.' });
-        res.status(201).json({ id: result.insertId, message: '¡Mensaje enviado!' });
+        if (err) return res.status(500).json({ error: 'Error al enviar tu comentario al servidor.' });
+        res.status(201).json({ id: result.insertId, message: '¡Tu mensaje ha sido publicado!' });
     });
 });
 
@@ -462,8 +441,8 @@ app.delete('/comentarios/:id', verificarToken, soloAdminSupremo, (req, res) => {
     const { id } = req.params;
     const query = 'DELETE FROM comentarios WHERE id = ?';
     db.query(query, [id], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error al eliminar el comentario' });
-        res.json({ message: 'Comentario eliminado exitosamente' });
+        if (err) return res.status(500).json({ error: 'Error al intentar eliminar el comentario.' });
+        res.json({ message: 'Comentario eliminado exitosamente.' });
     });
 });
 
@@ -473,10 +452,7 @@ app.delete('/comentarios/:id', verificarToken, soloAdminSupremo, (req, res) => {
 app.get('/productos', (req, res) => {
     const query = 'SELECT * FROM productos ORDER BY id ASC';
     db.query(query, (err, results) => {
-        if (err) {
-            console.error('Error catálogo de productos:', err);
-            return res.status(500).json({ error: 'Error al obtener el catálogo' });
-        }
+        if (err) return res.status(500).json({ error: 'Error al obtener el catálogo de productos.' });
         res.json(results);
     });
 });
@@ -484,11 +460,8 @@ app.get('/productos', (req, res) => {
 app.get('/productos/:id', (req, res) => {
     const query = 'SELECT * FROM productos WHERE id = ?';
     db.query(query, [req.params.id], (err, results) => {
-        if (err) {
-            console.error('Error obtener detalle producto:', err);
-            return res.status(500).json({ error: 'Error al obtener producto individual' });
-        }
-        if (results.length === 0) return res.status(404).json({ error: 'Producto no encontrado' });
+        if (err) return res.status(500).json({ error: 'Error al obtener los detalles del producto.' });
+        if (results.length === 0) return res.status(404).json({ error: 'El producto solicitado no existe.' });
         res.json(results[0]);
     });
 });
@@ -498,19 +471,13 @@ app.get('/productos/:id', (req, res) => {
 // ==========================================
 app.post('/pedidos', verificarToken, (req, res) => {
     const { total, items } = req.body;
-    // Extraer usuario_id si el token es de un cliente
     const usuario_id = req.user && req.user.role === 'cliente' ? req.user.id : null;
     
-    // 1. Insertar el encabezado en pedidos
     db.query("INSERT INTO pedidos (total, estado, usuario_id) VALUES (?, 'pendiente', ?)", [total, usuario_id], (err, result) => {
-        if (err) {
-            console.error('Error creando pedido maestra:', err);
-            return res.status(500).json({ error: 'Error al generar el bloque de pedido' });
-        }
+        if (err) return res.status(500).json({ error: 'Error al registrar la orden de pedido.' });
         
         const id_pedido = result.insertId;
         
-        // 2. Insertar los items en detalles_pedido iterativamente
         if (items && items.length > 0) {
             let completados = 0;
             let huboError = false;
@@ -518,17 +485,10 @@ app.post('/pedidos', verificarToken, (req, res) => {
             items.forEach(item => {
                 db.query('INSERT INTO detalles_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)', 
                 [id_pedido, item.id, item.cantidad, item.precio], (errDetalle) => {
-                    if (errDetalle) {
-                        console.error('Error insertando detalle de factura:', errDetalle);
-                        huboError = true;
-                    }
-                    
+                    if (errDetalle) huboError = true;
                     completados++;
-                    // 3. Evaluar respuesta tras el loop asíncrono
                     if (completados === items.length) {
-                        if (huboError) {
-                            return res.status(500).json({ error: 'Pedido registrado, parcialmente defectuoso' });
-                        }
+                        if (huboError) return res.status(500).json({ error: 'La orden fue creada pero algunos detalles no pudieron guardarse.' });
                         return res.status(201).json({ id_pedido });
                     }
                 });
@@ -553,7 +513,7 @@ app.get('/admin/pedidos', verificarToken, (req, res) => {
       ORDER BY p.fecha DESC
     `;
     db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error obteniendo pedidos' });
+        if (err) return res.status(500).json({ error: 'Error al obtener el tablero de pedidos.' });
         
         const map = new Map();
         results.forEach(row => {
@@ -563,7 +523,7 @@ app.get('/admin/pedidos', verificarToken, (req, res) => {
                     fecha: row.fecha,
                     total: row.total,
                     estado: row.estado,
-                    expanded: false, // Variable frontend inyectable
+                    expanded: false,
                     productos: []
                 });
             }
@@ -584,13 +544,13 @@ app.patch('/pedidos/:id/estado', verificarToken, (req, res) => {
     const { estado } = req.body;
     const query = 'UPDATE pedidos SET estado = ? WHERE id = ?';
     db.query(query, [estado, req.params.id], (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error actualizando estado del pedido' });
-        res.json({ message: 'Estado actualizado correctamente' });
+        if (err) return res.status(500).json({ error: 'Error al actualizar el estado del pedido.' });
+        res.json({ message: 'Estado del pedido actualizado correctamente.' });
     });
 });
 
 // ==========================================
-// Iniciar el servidor (Actualizado para el puerto dinámico de Railway)
+// Iniciar el servidor
 // ==========================================
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
