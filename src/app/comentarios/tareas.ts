@@ -41,9 +41,9 @@ export class TareasComponent implements OnInit {
   cargando = signal<boolean>(true);
   mostrarFormulario = signal<boolean>(false);
 
-  // SIGNALS DEL CATÁLOGO AÑADIDAS
-  catalogo = signal<ProductoFeed[]>([]);
-  cargandoCatalogo = signal<boolean>(true);
+  // SIGNALS DEL CATÁLOGO AÑADIDAS (Fallback any[])
+  catalogo = signal<any[]>([]);
+  cargandoCatalogo = signal<boolean>(false);
 
   ngOnInit() {
     this.cargarMuro();
@@ -52,7 +52,7 @@ export class TareasComponent implements OnInit {
 
   cargarCatalogo() {
     this.cargandoCatalogo.set(true);
-    this.http.get<ProductoFeed[]>(`${environment.apiUrl}/productos`).subscribe({
+    this.http.get<any[]>(`${environment.apiUrl}/productos`).subscribe({
       next: (datos) => {
         this.catalogo.set(datos);
         this.cargandoCatalogo.set(false);
