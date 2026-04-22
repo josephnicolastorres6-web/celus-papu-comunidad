@@ -1,57 +1,51 @@
-import { Component, signal, computed, inject } from '@angular/core'; 
+import { Component, signal, OnInit, inject } from '@angular/core'; 
 import { CommonModule } from '@angular/common'; 
-import { ComentariosService } from './service'; 
-import { TarjetaComponent } from './tarjeta'; 
 import { FormularioComponent } from './formulario'; 
-// 👇 IMPORTANTE: Importamos el servicio de autenticación
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service'; 
-// 👇 AÑADIMOS EL ROUTERMODULE para que funcionen los botones del HTML
 import { RouterModule } from '@angular/router'; 
+import { environment } from '../../environments/environment';
+
+export interface ResenaFeed {
+  id: number;
+  texto: string;
+  fecha: string;
+  estrellas: number;
+  username: string;
+  avatar: string;
+}
 
 @Component({
   selector: 'app-comentarios',
   standalone: true,
-  // Aquí añadimos RouterModule para quitar el error de [routerLink]
-  imports: [CommonModule, TarjetaComponent, FormularioComponent, RouterModule], 
+  imports: [CommonModule, FormularioComponent, RouterModule], 
   templateUrl: './comentarios.html',
   styleUrl: './comentarios.css'
 })
-export class ComentariosComponent {
-  
-  // 👇 Cambiamos a public para que el HTML pueda leer la señal 'cargando' (Requerimiento C.3)
-  public servicio = inject(ComentariosService);
+export class ComentariosComponent implements OnInit {
   public authService = inject(AuthService);
-
-  listaComentarios = this.servicio.listaComentarios;
-
-  usuariosUnicos = computed(() => {
-    const mapaUsuarios = new Map();
-    this.listaComentarios().forEach(c => {
-      if (!mapaUsuarios.has(c.nombre)) {
-        mapaUsuarios.set(c.nombre, c.avatar);
-      }
-    });
-    return Array.from(mapaUsuarios, ([nombre, avatar]) => ({ nombre, avatar }));
-  });
-
-  usuarioSeleccionado = signal<string>('Antonia Céspedes');
-
-  comentariosDelUsuario = computed(() => {
-    return this.listaComentarios().filter(c => c.nombre === this.usuarioSeleccionado());
-  });
-
+  private http = inject(HttpClient);
+  
+  feedMuro = signal<ResenaFeed[]>([]);
+  cargando = signal<boolean>(true);
   mostrarFormulario = signal<boolean>(false);
 
-  // ACTUALIZACIÓN REQUERIMIENTO B.1: Función para el Logo
-  resetearVista() {
-    this.usuarioSeleccionado.set('Antonia Céspedes');
-    this.mostrarFormulario.set(false);
-    console.log('🏠 Regresando al inicio de Celus Papu...');
+  ngOnInit() {
+    this.cargarMuro();
   }
 
-  seleccionarUsuario(nombre: string) {
-    this.usuarioSeleccionado.set(nombre);
-    this.mostrarFormulario.set(false);
+  cargarMuro() {
+    this.cargando.set(true);
+    this.http.get<ResenaFeed[]>(`${environment.apiUrl}/comentarios`).subscribe({
+      next: (datos) => {
+        this.feedMuro.set(datos);
+        this.cargando.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando el Muro de la Comunidad:', err);
+        this.cargando.set(false);
+      }
+    });
   }
 
   toggleFormulario() {

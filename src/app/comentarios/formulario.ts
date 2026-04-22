@@ -10,7 +10,7 @@ import { Comentario } from './model';
   template: `
     <div class="modal-backdrop" (click)="onCerrar()">
       <div class="modal-caja" (click)="$event.stopPropagation()">
-        <h2>Agregar Reseña para {{ nombreUsuario }}</h2>
+        <h2>Agregar Reseña a la Comunidad</h2>
 
         <label>Modelo del celular</label>
         <input type="text" [(ngModel)]="modelo" class="input-modal">
@@ -40,7 +40,6 @@ import { Comentario } from './model';
   styleUrl: './comentarios.css'
 })
 export class FormularioComponent {
-  @Input({ required: true }) nombreUsuario!: string;
   @Output() cerrar = new EventEmitter<void>();
 
   modelo = ''; 
@@ -59,7 +58,7 @@ export class FormularioComponent {
       // Creamos el objeto siguiendo el modelo para MySQL (Requerimiento A.3)
       const nuevaResena: Comentario = {
         id: 0, // MySQL se encarga del auto-incremento
-        nombre: this.nombreUsuario,
+        nombre: 'Autor', // Se obvia por el backend, usamos Muro Público
         modelo: this.modelo,
         estrellas: Number(this.estrellas),
         texto: this.texto,

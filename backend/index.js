@@ -245,9 +245,18 @@ app.post('/administradores', verificarToken, soloAdminSupremo, (req, res) => {
 // ==========================================
 
 app.get('/comentarios', (req, res) => {
-    const query = 'SELECT * FROM comentarios ORDER BY id DESC';
+    // RF: Backend optimizado - Un JOIN maestro para sacar el Muro completo
+    const query = `
+      SELECT c.id, c.texto, c.fecha, c.estrellas, a.username, a.avatar 
+      FROM comentarios c 
+      JOIN administradores a ON c.admin_id = a.id 
+      ORDER BY c.id DESC
+    `;
     db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error al obtener los comentarios' });
+        if (err) {
+            console.error('Error JOIN muro:', err);
+            return res.status(500).json({ error: 'Error al obtener el muro de comentarios' });
+        }
         res.json(results);
     });
 });
