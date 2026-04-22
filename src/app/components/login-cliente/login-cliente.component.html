@@ -1,0 +1,31 @@
+<div class="login-container">
+  <div class="glass-card animate-pop">
+    <div class="header">
+      <img src="assets/logo.png" alt="Celus Papu" class="logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3616/3616230.png'">
+      <h1>Ingreso de Cliente</h1>
+      <p>Accede a tu cuenta de alta gama</p>
+    </div>
+
+    <form (submit)="login(); $event.preventDefault()" class="form-grid">
+      <div class="input-group">
+        <label>Correo Electrónico</label>
+        <input type="email" [(ngModel)]="email" name="email" placeholder="tu@email.com" required>
+      </div>
+
+      <div class="input-group">
+        <label>Contraseña</label>
+        <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn-neon" [disabled]="cargando()">
+        <span *ngIf="!cargando()">INGRESAR AHORA</span>
+        <span *ngIf="cargando()" class="loader"></span>
+      </button>
+
+      <div class="footer-links">
+        <p>¿No tienes cuenta? <a routerLink="/registro" class="neon-link">Regístrate aquí</a></p>
+        <a routerLink="/" class="back-link">Volver al inicio</a>
+      </div>
+    </form>
+  </div>
+</div>

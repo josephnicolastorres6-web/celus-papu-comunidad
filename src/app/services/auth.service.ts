@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -14,7 +14,25 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  constructor() { }
+  // Signals de Sesión de Clientes
+  public usuarioActual = signal<any>(null);
+  public estaLogueadoCliente = computed(() => !!this.usuarioActual());
+
+  constructor() {
+    this.restaurarSesionCliente();
+  }
+
+  private restaurarSesionCliente() {
+    if (typeof window !== 'undefined' && localStorage.getItem('token_cliente')) {
+      const token = localStorage.getItem('token_cliente');
+      try {
+        const payload = JSON.parse(atob(token!.split('.')[1]));
+        this.usuarioActual.set(payload);
+      } catch (e) {
+        localStorage.removeItem('token_cliente');
+      }
+    }
+  }
 
   login(username: string, password: string) {
     return this.http.post<any>(`${this.apiUrl}/login`, { username, password })
@@ -54,5 +72,29 @@ export class AuthService {
     localStorage.removeItem('token'); 
     this.router.navigate(['/login']);
     console.log('🚪 Sesión cerrada exitosamente en Celus Papu');
+  }
+
+  // --- MÓDULO DE CLIENTES ---
+  loginCliente(email: string, pass: string) {
+    return this.http.post<any>(`${this.apiUrl}/api/usuarios/login`, { email, password: pass })
+      .pipe(
+        tap(res => {
+          if (res.token) {
+            localStorage.setItem('token_cliente', res.token);
+            const payload = JSON.parse(atob(res.token.split('.')[1]));
+            this.usuarioActual.set(payload);
+          }
+        })
+      );
+  }
+
+  registroCliente(datos: any) {
+    return this.http.post<any>(`${this.apiUrl}/api/usuarios/registro`, datos);
+  }
+
+  logoutCliente() {
+    localStorage.removeItem('token_cliente');
+    this.usuarioActual.set(null);
+    this.router.navigate(['/']);
   }
 }

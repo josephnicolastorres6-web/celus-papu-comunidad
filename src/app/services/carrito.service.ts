@@ -1,8 +1,10 @@
 import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { ProductoFeed } from '../comentarios/comentarios';
 import { ToastService } from './toast.service';
+import { AuthService } from './auth.service';
 
 export interface CartItem extends ProductoFeed {
   cantidad: number;
@@ -14,6 +16,8 @@ export interface CartItem extends ProductoFeed {
 export class CarritoService {
   private http = inject(HttpClient);
   private toastService = inject(ToastService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   // Estado reactivo del carrito usando Angular Signals (El Cerebro)
   public items = signal<CartItem[]>([]);
@@ -75,6 +79,14 @@ export class CarritoService {
   }
   
   finalizarCompra() {
+    // 🔥 VERIFICACIÓN DE SESIÓN ANVANTES DE COMPRAR
+    if (!this.authService.usuarioActual()) {
+       this.toastService.mostrar('Debes iniciar sesión para finalizar tu pedido Papu.', 'info');
+       this.panelVisible.set(false);
+       this.router.navigate(['/login']);
+       return;
+    }
+
     if(this.items().length > 0) {
       const payload = {
         total: this.total(),

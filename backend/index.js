@@ -140,6 +140,60 @@ app.post('/login', (req, res) => {
 });
 
 // ==========================================
+// MÓDULO DE CLIENTES (REGISTRO Y LOGIN)
+// ==========================================
+app.post('/api/usuarios/registro', async (req, res) => {
+    const { nombre, email, password, direccion, ciudad, avatar } = req.body;
+    
+    if (!nombre || !email || !password) {
+        return res.status(400).json({ error: 'Nombre, Email y Password son obligatorios.' });
+    }
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const avatarDefault = avatar || 'assets/avatars/ninja.svg';
+
+        const query = 'INSERT INTO usuarios (nombre, email, password, direccion, ciudad, avatar) VALUES (?, ?, ?, ?, ?, ?)';
+        db.query(query, [nombre, email, hashedPassword, direccion, ciudad, avatarDefault], (err, result) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Ese correo ya está registrado.' });
+                return res.status(500).json({ error: 'Error al registrar cliente.' });
+            }
+            res.status(201).json({ message: 'Registro exitoso.', id: result.insertId });
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'Error del servidor.' });
+    }
+});
+
+app.post('/api/usuarios/login', (req, res) => {
+    const { email, password } = req.body;
+    const query = 'SELECT * FROM usuarios WHERE email = ?';
+
+    db.query(query, [email], async (err, results) => {
+        if (err || results.length === 0) return res.status(401).json({ error: 'Credenciales inválidas.' });
+
+        const usuario = results[0];
+        const valida = await bcrypt.compare(password, usuario.password);
+        if (!valida) return res.status(401).json({ error: 'Credenciales inválidas.' });
+
+        const token = jwt.sign(
+            { id: usuario.id, nombre: usuario.nombre, email: usuario.email, avatar: usuario.avatar, role: 'cliente' },
+            SECRET_KEY,
+            { expiresIn: '24h' }
+        );
+
+        res.json({ 
+            message: '¡Bienvenido a Celus Papu!', 
+            token, 
+            nombre: usuario.nombre,
+            avatar: usuario.avatar
+        });
+    });
+});
+
+// ==========================================
 // MIDDLEWARES DE SEGURIDAD
 // ==========================================
 const verificarToken = (req, res, next) => {
@@ -153,7 +207,8 @@ const verificarToken = (req, res, next) => {
 
     try {
         const verificado = jwt.verify(token, SECRET_KEY);
-        req.admin = verificado; 
+        // Inyectamos el payload verificado en req.user (para admin o cliente)
+        req.user = verificado; 
         next();
     } catch (error) {
         res.status(401).json({ error: 'Tu sesión es inválida o ya expiró.' });
@@ -162,7 +217,7 @@ const verificarToken = (req, res, next) => {
 
 const soloAdminSupremo = (req, res, next) => {
     // Verificamos si es el usuario 'admin' o si tiene el rol 'admin'
-    if (req.admin.username !== 'admin' && req.admin.role !== 'admin') {
+    if (req.user.username !== 'admin' && req.user.role !== 'admin') {
         return res.status(403).json({ error: 'No tienes permisos de Jefe. Solo el Admin Supremo puede hacer esto.' });
     }
     next();
@@ -315,9 +370,11 @@ app.get('/productos/:id', (req, res) => {
 // ==========================================
 app.post('/pedidos', verificarToken, (req, res) => {
     const { total, items } = req.body;
+    // Extraer usuario_id si el token es de un cliente
+    const usuario_id = req.user && req.user.role === 'cliente' ? req.user.id : null;
     
     // 1. Insertar el encabezado en pedidos
-    db.query("INSERT INTO pedidos (total, estado) VALUES (?, 'pendiente')", [total], (err, result) => {
+    db.query("INSERT INTO pedidos (total, estado, usuario_id) VALUES (?, 'pendiente', ?)", [total, usuario_id], (err, result) => {
         if (err) {
             console.error('Error creando pedido maestra:', err);
             return res.status(500).json({ error: 'Error al generar el bloque de pedido' });

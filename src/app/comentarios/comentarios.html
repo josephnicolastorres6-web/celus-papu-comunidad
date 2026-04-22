@@ -15,10 +15,30 @@
         }
       </button>
 
-      @if (!authService.isAdmin()) {
-        <button class="btn-nav" routerLink="/login" style="margin-left: 15px;">Iniciar Sesión</button>
-      } @else {
+      <!-- SESIÓN DE ADMINISTRADOR -->
+      @if (authService.isAdmin()) {
         <button class="btn-nav neon-btn" routerLink="/dashboard" style="margin-left: 15px;">Dashboard Matrix</button>
+        <button class="btn-nav" (click)="authService.logout()" style="margin-left: 10px; color: #ff4d4d; border-color: #ff4d4d;">Salir</button>
+      } 
+      
+      <!-- SESIÓN DE CLIENTE (NUEVO) -->
+      @else if (authService.usuarioActual()) {
+        <div class="user-profile-nav">
+          <img [src]="authService.usuarioActual().avatar" class="nav-avatar" alt="Avatar">
+          <div class="user-info-text">
+            <span class="user-name">{{ authService.usuarioActual().nombre }}</span>
+            <span class="badge-vip">Papu VIP 💎</span>
+          </div>
+          <button class="btn-logout-client" (click)="authService.logoutCliente()" title="Cerrar Sesión">🚪</button>
+        </div>
+      }
+
+      <!-- INVITADO -->
+      @else {
+        <div class="guest-actions">
+          <button class="btn-nav" routerLink="/login" style="margin-left: 15px;">Ingresar</button>
+          <button class="btn-nav neon-btn" routerLink="/registro" style="margin-left: 10px;">Registrarse</button>
+        </div>
       }
     </div>
   </header>
