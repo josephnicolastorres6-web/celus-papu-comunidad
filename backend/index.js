@@ -355,6 +355,56 @@ app.post('/pedidos', verificarToken, (req, res) => {
 });
 
 // ==========================================
+// TABLERO DE COMANDO ADMIN (TABLA DE GESTIÓN)
+// ==========================================
+app.get('/admin/pedidos', verificarToken, (req, res) => {
+    const query = `
+      SELECT p.id as pedido_id, p.fecha, p.total, p.estado,
+             d.cantidad, d.precio_unitario,
+             pr.nombre as producto_nombre
+      FROM pedidos p
+      LEFT JOIN detalles_pedido d ON p.id = d.id_pedido
+      LEFT JOIN productos pr ON d.id_producto = pr.id
+      ORDER BY p.fecha DESC
+    `;
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: 'Error obteniendo pedidos' });
+        
+        const map = new Map();
+        results.forEach(row => {
+            if (!map.has(row.pedido_id)) {
+                map.set(row.pedido_id, {
+                    id: row.pedido_id,
+                    fecha: row.fecha,
+                    total: row.total,
+                    estado: row.estado,
+                    expanded: false, // Variable frontend inyectable
+                    productos: []
+                });
+            }
+            if (row.producto_nombre) {
+                map.get(row.pedido_id).productos.push({
+                    nombre: row.producto_nombre,
+                    cantidad: row.cantidad,
+                    precio: row.precio_unitario
+                });
+            }
+        });
+        
+        res.json(Array.from(map.values()));
+    });
+});
+
+app.patch('/pedidos/:id/estado', verificarToken, (req, res) => {
+    const { estado } = req.body;
+    const query = 'UPDATE pedidos SET estado = ? WHERE id = ?';
+    db.query(query, [estado, req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ error: 'Error actualizando estado del pedido' });
+        res.json({ message: 'Estado actualizado correctamente' });
+    });
+});
+
+// ==========================================
 // Iniciar el servidor (Actualizado para el puerto dinámico de Railway)
 // ==========================================
 const PORT = process.env.PORT || 8080;

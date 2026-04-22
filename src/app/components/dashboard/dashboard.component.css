@@ -499,3 +499,151 @@
   .glass-header { flex-direction: column; gap: 15px; text-align: center; }
   .fab-neon { bottom: 20px; right: 20px; width: 60px; height: 60px; }
 }
+
+/* =========================================
+   TABLERO DE PEDIDOS (ADMIN)
+   ========================================= */
+.pedidos-card {
+  padding: 2rem;
+}
+
+.pedidos-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+}
+
+.pedidos-header h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--neon-cyan);
+  margin: 0 0 5px 0;
+  font-size: 1.5rem;
+}
+
+.pedidos-header p {
+  color: #94a3b8;
+  margin: 0;
+}
+
+.border-b {
+  border-bottom: 1px solid #333;
+}
+
+/* Tabla Glassmorphism */
+.glass-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  text-align: left;
+}
+
+.glass-table th {
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  padding: 1rem;
+  border-bottom: 1px solid #333;
+}
+
+.pedido-row {
+  background: rgba(255, 255, 255, 0.02);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.pedido-row:hover {
+  background: rgba(0, 243, 255, 0.05);
+}
+
+.pedido-row.expanded-row {
+  background: rgba(0, 243, 255, 0.08);
+  border-left: 3px solid var(--neon-cyan);
+}
+
+.glass-table td {
+  padding: 1.2rem 1rem;
+  color: #e2e8f0;
+}
+
+.neon-money {
+  color: var(--neon-cyan) !important;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+
+.status-badge {
+  padding: 5px 12px;
+  background: rgba(255, 153, 0, 0.1);
+  color: #ff9900;
+  border: 1px solid rgba(255, 153, 0, 0.3);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-enviado {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.btn-check {
+  background: transparent;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.neon-btn-green {
+  border: 1px solid #10b981;
+  color: #10b981;
+}
+
+.neon-btn-green:hover {
+  background: #10b981;
+  color: #0b0f19;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+/* Detalle Desplegable */
+.detalle-dropdown td {
+  padding: 0 1rem 1rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid #333;
+}
+
+.detalle-wrapper {
+  padding: 1.5rem;
+  border-left: 2px solid #333;
+  margin-left: 10px;
+}
+
+.detalle-wrapper h4 {
+  color: #fff;
+  margin: 0 0 1rem 0;
+}
+
+.detalle-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.detalle-list li {
+  color: #94a3b8;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.cantidad {
+  background: #333;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-right: 10px;
+  font-weight: 700;
+}

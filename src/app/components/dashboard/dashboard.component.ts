@@ -52,8 +52,51 @@ export class DashboardComponent implements OnInit {
   textoMegafono = signal<string>('');
   publicandoMegafono = signal<boolean>(false);
 
+  // ==========================================
+  // ESTADO DEL TABLERO DE PEDIDOS
+  // ==========================================
+  listaPedidos = signal<any[]>([]);
+  cargandoPedidos = signal<boolean>(false);
+
   ngOnInit() {
     this.cargarUsuarios();
+    this.cargarPedidos();
+  }
+
+  cargarPedidos() {
+    this.cargandoPedidos.set(true);
+    this.http.get<any[]>(`${this.apiUrl}/admin/pedidos`).subscribe({
+      next: (data) => {
+        this.listaPedidos.set(data);
+        this.cargandoPedidos.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando Tablero de Pedidos:', err);
+        this.cargandoPedidos.set(false);
+      }
+    });
+  }
+
+  marcarEnviado(pedido: any) {
+    if(confirm(`¿Confirmas el envío (Despacho) del Pedido #${pedido.id}?`)) {
+      this.http.patch(`${this.apiUrl}/pedidos/${pedido.id}/estado`, { estado: 'Enviado' }).subscribe({
+        next: () => {
+          this.listaPedidos.update(pedidos => pedidos.map(p => 
+            p.id === pedido.id ? { ...p, estado: 'Enviado' } : p
+          ));
+        },
+        error: (err) => {
+          console.error('Error al enviar:', err);
+          alert('Hubo un error al despachar. Intenta nuevamente.');
+        }
+      });
+    }
+  }
+
+  toggleDetallePedido(pedido: any) {
+    this.listaPedidos.update(pedidos => pedidos.map(p => 
+      p.id === pedido.id ? { ...p, expanded: !p.expanded } : p
+    ));
   }
 
   cargarUsuarios() {

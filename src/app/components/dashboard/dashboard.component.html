@@ -31,6 +31,75 @@
         </button>
       </div>
     </div>
+
+    <!-- ==========================================
+         TABLERO DE COMANDO: GESTIÓN DE PEDIDOS
+         ========================================== -->
+    <div class="pedidos-card glass-card" style="grid-column: 1 / -1; margin-bottom: 2rem;">
+      <div class="pedidos-header border-b">
+        <h3>📦 Tablero de Gestión de Pedidos</h3>
+        <p>Control operativo de hardware vendido en Celus Papu</p>
+      </div>
+
+      <div class="pedidos-body" style="overflow-x: auto;">
+        @if (cargandoPedidos()) {
+          <div class="loader-container">
+            <span class="loader"></span>
+          </div>
+        } @else if (listaPedidos().length === 0) {
+          <p style="text-align: center; color: #94a3b8; padding: 2rem;">No hay ventas registradas aún.</p>
+        } @else {
+          <table class="glass-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Fecha Ingreso</th>
+                <th>Total Facturado</th>
+                <th>Estado</th>
+                <th>Despachar</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (pedido of listaPedidos(); track pedido.id) {
+                <tr class="pedido-row" [class.expanded-row]="pedido.expanded" (click)="toggleDetallePedido(pedido)">
+                  <td><strong>#{{ pedido.id }}</strong></td>
+                  <td>{{ pedido.fecha | date:'short' }}</td>
+                  <td class="neon-money">${{ pedido.total | number:'1.2-2' }}</td>
+                  <td>
+                    <span class="status-badge" [class.status-enviado]="pedido.estado === 'Enviado'">
+                      {{ pedido.estado }}
+                    </span>
+                  </td>
+                  <td (click)="$event.stopPropagation()">
+                    @if (pedido.estado === 'pendiente' || pedido.estado === 'Pendiente') {
+                      <button class="btn-check neon-btn-green" (click)="marcarEnviado(pedido)">Marcar Enviado</button>
+                    } @else {
+                      <span style="color: #10b981;">✔️ Completado</span>
+                    }
+                  </td>
+                </tr>
+                @if (pedido.expanded) {
+                  <tr class="detalle-dropdown">
+                    <td colspan="5">
+                      <div class="detalle-wrapper">
+                        <h4>🛒 Hardware en este paquete:</h4>
+                        <ul class="detalle-list">
+                          @for (prod of pedido.productos; track prod.nombre) {
+                            <li><span class="cantidad">x{{ prod.cantidad }}</span> {{ prod.nombre }} - $\{{ prod.precio }}</li>
+                          }
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+    <!-- Gestión Usuarios (Original) -->
     <div class="glass-grid">
       @for (user of usuarios(); track user.id) {
       <div class="glass-card">
