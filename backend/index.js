@@ -285,6 +285,20 @@ app.delete('/comentarios/:id', verificarToken, soloAdminSupremo, (req, res) => {
 });
 
 // ==========================================
+// CATÁLOGO DE PRODUCTOS (RF: ALTA GAMA)
+// ==========================================
+app.get('/productos', (req, res) => {
+    const query = 'SELECT * FROM productos ORDER BY id ASC';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error catálogo de productos:', err);
+            return res.status(500).json({ error: 'Error al obtener el catálogo' });
+        }
+        res.json(results);
+    });
+});
+
+// ==========================================
 // Iniciar el servidor (Actualizado para el puerto dinámico de Railway)
 // ==========================================
 const PORT = process.env.PORT || 8080;

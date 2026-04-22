@@ -20,6 +20,37 @@
     </div>
   </header>
 
+  <!-- CATÁLOGO DE PRODUCTOS - NUEVO -->
+  <section class="catalogo-section">
+    <h2 class="catalogo-title">🏆 Catálogo de Alta Gama</h2>
+    <div class="catalogo-grid">
+      @if (cargandoCatalogo()) {
+        <div class="loader-container">
+          <span class="loader"></span>
+        </div>
+      } @else {
+        @for (prod of catalogo(); track prod.id) {
+          <div class="glass-product-card">
+            <div class="prod-img-wrapper">
+              <img [src]="prod.imagen_url" alt="{{ prod.nombre }}" class="prod-img">
+            </div>
+            <div class="prod-info">
+              <span class="prod-marca">{{ prod.marca }}</span>
+              <h3 class="prod-name">{{ prod.nombre }}</h3>
+              <p class="prod-specs">{{ prod.especificaciones }}</p>
+              <div class="prod-footer">
+                <span class="prod-price">${{ prod.precio }}</span>
+                <button class="btn-buy neon-btn">Ver Más</button>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </section>
+  <hr style="border-color: #333; margin: 3rem 0;">
+
+  <!-- MURO DE LA COMUNIDAD (Original) -->
   <main class="feed-main">
     <div class="cabecera-derecha">
       <h2>Muro Público de la Comunidad 🗿</h2>

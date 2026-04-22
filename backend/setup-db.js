@@ -43,6 +43,27 @@ async function setupDatabase() {
       )
     `);
 
+    console.log('📦  Diseñando tabla de "productos" [Catálogo de Alta Gama]...');
+    await db.execute('DROP TABLE IF EXISTS productos');
+    await db.execute(`
+      CREATE TABLE productos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(255) NOT NULL,
+        marca VARCHAR(100),
+        precio DECIMAL(10,2),
+        especificaciones TEXT,
+        imagen_url VARCHAR(255)
+      )
+    `);
+
+    console.log('💎  Inyectando productos premium de catálogo por defecto...');
+    await db.execute(`
+      INSERT INTO productos (nombre, marca, precio, especificaciones, imagen_url) VALUES 
+      ('iPhone 15 Pro Max', 'Apple', 1199.99, 'Chip A17 Pro, Titanium, Triple Cam 48MP', 'https://m.media-amazon.com/images/I/81Os1SDWpcL._AC_SX679_.jpg'),
+      ('ROG Strix Scar 18', 'ASUS', 2999.00, 'Intel i9 14th Gen, RTX 4090, 32GB DDR5', 'https://m.media-amazon.com/images/I/81xGsm67gCL._AC_SX679_.jpg'),
+      ('Katana 15', 'MSI', 1100.50, 'Intel i7, RTX 4060, 16GB RAM, 144Hz FHD', 'https://m.media-amazon.com/images/I/81rM5O0MmeL._AC_SX679_.jpg')
+    `);
+
     console.log('✅ ¡Arquitectura de Base de Datos Relacional inicializada con Éxito!');
     console.log('🔒 La Eliminación en Cascada (ON DELETE CASCADE) está activa y protegiendo tus esquemas.');
     

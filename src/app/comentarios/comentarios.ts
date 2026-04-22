@@ -15,6 +15,15 @@ export interface ResenaFeed {
   avatar: string;
 }
 
+export interface ProductoFeed {
+  id: number;
+  nombre: string;
+  marca: string;
+  precio: number;
+  especificaciones: string;
+  imagen_url: string;
+}
+
 @Component({
   selector: 'app-comentarios',
   standalone: true,
@@ -30,8 +39,27 @@ export class ComentariosComponent implements OnInit {
   cargando = signal<boolean>(true);
   mostrarFormulario = signal<boolean>(false);
 
+  // ESTADO DEL CATÁLOGO
+  catalogo = signal<ProductoFeed[]>([]);
+  cargandoCatalogo = signal<boolean>(true);
+
   ngOnInit() {
     this.cargarMuro();
+    this.cargarCatalogo();
+  }
+
+  cargarCatalogo() {
+    this.cargandoCatalogo.set(true);
+    this.http.get<ProductoFeed[]>(`${environment.apiUrl}/productos`).subscribe({
+      next: (datos) => {
+        this.catalogo.set(datos);
+        this.cargandoCatalogo.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando el catálogo:', err);
+        this.cargandoCatalogo.set(false);
+      }
+    });
   }
 
   cargarMuro() {
