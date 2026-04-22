@@ -56,23 +56,23 @@ db.connect(err => {
 // SIEMBRA AUTOMÁTICA (AUTO-SEEDING)
 // ==========================================
 const inicializarAdmin = () => {
-    const checkQuery = 'SELECT * FROM administradores WHERE username = "admin"';
+    const checkQuery = 'SELECT * FROM administradores WHERE username = "admin0"';
     db.query(checkQuery, async (err, results) => {
         if (err) return console.error('Error verificando administradores:', err);
 
         if (results.length === 0) {
             try {
                 const salt = await bcrypt.genSalt(10);
-                const hashedPassword = await bcrypt.hash('admin123', salt);
+                const hashedPassword = await bcrypt.hash('admin1234', salt);
                 const insertQuery = 'INSERT INTO administradores (username, password) VALUES (?, ?)';
-                db.query(insertQuery, ['admin', hashedPassword], (err, result) => {
-                    if (!err) console.log('🛡️ Siembra Automática: Administrador inicial (admin) creado exitosamente.');
+                db.query(insertQuery, ['admin0', hashedPassword], (err, result) => {
+                    if (!err) console.log('🛡️ Siembra Automática: Administrador inicial (admin0) creado exitosamente.');
                 });
             } catch (error) {
                 console.error('Error encriptando la contraseña:', error);
             }
         } else {
-            console.log('🛡️ El administrador por defecto ya existe en la base de datos.');
+            console.log('🛡️ El administrador principal (admin0) ya existe en la base de datos.');
         }
     });
 };
@@ -216,8 +216,8 @@ const verificarToken = (req, res, next) => {
 };
 
 const soloAdminSupremo = (req, res, next) => {
-    if (req.user.username !== 'admin' && req.user.role !== 'admin') {
-        return res.status(403).json({ error: 'Permisos insuficientes. Solo el Administrador puede realizar esta acción.' });
+    if (req.user.username !== 'admin0' && req.user.username !== 'admin' && req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Permisos insuficientes. Solo el Administrador principal puede realizar esta acción.' });
     }
     next();
 };
@@ -259,10 +259,21 @@ app.put('/usuarios/:id', verificarToken, async (req, res) => {
 
 app.delete('/usuarios/:id', verificarToken, (req, res) => {
     const { id } = req.params;
-    const query = 'DELETE FROM administradores WHERE id = ?';
-    db.query(query, [id], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error al eliminar el administrador' });
-        res.json({ message: 'Administrador eliminado con éxito' });
+    
+    // Proteger admin0 de ser eliminado
+    const checkQuery = 'SELECT username FROM administradores WHERE id = ?';
+    db.query(checkQuery, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: 'Error al verificar el administrador' });
+        
+        if (results.length > 0 && results[0].username === 'admin0') {
+            return res.status(403).json({ error: 'Protección activa: No puedes eliminar al Administrador Principal (admin0).' });
+        }
+        
+        const deleteQuery = 'DELETE FROM administradores WHERE id = ?';
+        db.query(deleteQuery, [id], (err, result) => {
+            if (err) return res.status(500).json({ error: 'Error al eliminar el administrador' });
+            res.json({ message: 'Administrador eliminado con éxito' });
+        });
     });
 });
 
