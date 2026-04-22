@@ -1,0 +1,16 @@
+<div class="toast-container">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="toast glass-toast pop-in" [class]="'toast-' + toast.tipo">
+      <span class="toast-icon">
+        @if (toast.tipo === 'success') { ✔️ }
+        @else if (toast.tipo === 'error') { ❌ }
+        @else { ℹ️ }
+      </span>
+      <div class="toast-text-box">
+        <strong>{{ toast.tipo === 'success' ? 'ÉXITO' : toast.tipo === 'error' ? 'ERROR' : 'INFO' }}</strong>
+        <p class="toast-text">{{ toast.texto }}</p>
+      </div>
+      <button class="toast-close" (click)="toastService.remover(toast.id)">✖</button>
+    </div>
+  }
+</div>
