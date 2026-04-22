@@ -14,29 +14,33 @@
   <main class="glass-content">
     <div class="glass-grid">
       @for (user of usuarios(); track user.id) {
-        <div class="glass-card">
-          <div class="card-avatar">
-            <span class="avatar-letter">{{ user.nombre.charAt(0) | uppercase }}</span>
-          </div>
-          <div class="card-info">
-            <h3 class="card-title">{{ user.nombre }}</h3>
-            <!-- Badge dinámico usando Signal values -->
-            <span class="badge" 
-                  [class.badge-admin]="user.rol === 'Administrador'"
-                  [class.badge-vip]="user.rol === 'VIP'"
-                  [class.badge-user]="user.rol === 'Usuario'">
-              {{ user.rol }}
-            </span>
-            <p class="fecha-txt">Registrado: {{ user.fecha }}</p>
-          </div>
-          <button class="btn-delete" (click)="eliminarUsuario(user.id, user.nombre)" title="Eliminar usuario">
-            🗑️
-          </button>
+      <div class="glass-card">
+        <div class="card-avatar">
+          @if(user.avatar) {
+          <img [src]="user.avatar" class="avatar-img" alt="Avatar">
+          } @else {
+          <span class="avatar-letter">{{ user.nombre.charAt(0) | uppercase }}</span>
+          }
         </div>
+        <div class="card-info">
+          <h3 class="card-title">{{ user.nombre }}</h3>
+          <!-- Badge dinámico usando Signal values -->
+          <span class="badge" [class.badge-admin]="user.rol === 'Administrador'" [class.badge-vip]="user.rol === 'VIP'"
+            [class.badge-user]="user.rol === 'Usuario'">
+            {{ user.rol }}
+          </span>
+          <p class="fecha-txt">Registrado: {{ user.fecha }}</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn-icon btn-edit" (click)="editarUsuario(user)" title="Editar usuario">✏️</button>
+          <button class="btn-icon btn-delete" (click)="eliminarUsuario(user.id, user.nombre)"
+            title="Eliminar usuario">🗑️</button>
+        </div>
+      </div>
       } @empty {
-        <div class="empty-state glass-card">
-          <p>La base de datos está vacía. ¡Agrega el primer usuario!</p>
-        </div>
+      <div class="empty-state glass-card">
+        <p>La base de datos está vacía. ¡Agrega el primer usuario!</p>
+      </div>
       }
     </div>
   </main>
@@ -48,49 +52,58 @@
 
   <!-- Modal Glassmorphism SPA -->
   @if (modalVisible()) {
-    <div class="glass-overlay" (click)="cerrarModal()">
-      <div class="glass-modal" (click)="$event.stopPropagation()">
-        
-        <div class="modal-header">
-          <h3>👤 Nuevo Usuario</h3>
-          <p class="subtitle">Agrega un miembro a la base de datos.</p>
-        </div>
-        
-        <div class="form-group">
-          <label>Nombre del Usuario</label>
-          <input type="text" 
-                 [ngModel]="formUsuario().nombre" 
-                 (ngModelChange)="formUsuario.update(u => ({ ...u, nombre: $event }))" 
-                 class="glass-input" 
-                 placeholder="Ej: Papu Supremo">
-        </div>
+  <div class="glass-overlay" (click)="cerrarModal()">
+    <div class="glass-modal" (click)="$event.stopPropagation()">
 
-        <div class="form-group">
-          <label>Rol Asignado</label>
-          <div class="custom-select-wrapper">
-             <select [ngModel]="formUsuario().rol" 
-                     (ngModelChange)="formUsuario.update(u => ({ ...u, rol: $event }))" 
-                     class="glass-input glass-select">
-               <option value="Usuario">Usuario (Estándar)</option>
-               <option value="VIP">VIP</option>
-               <option value="Administrador">Administrador</option>
-             </select>
-          </div>
-        </div>
-
-        <div class="modal-actions">
-          <button class="btn-ghost" (click)="cerrarModal()" [disabled]="cargando()">Cancelar</button>
-          
-          <button class="btn-neon" (click)="guardarUsuario()" [disabled]="cargando()">
-            @if(cargando()) {
-              <span class="loader"></span> Guardando...
-            } @else {
-              Confirmar
-            }
-          </button>
-        </div>
-        
+      <div class="modal-header">
+        <h3>{{ editandoId() ? '✏️ Editar Usuario' : '👤 Nuevo Usuario' }}</h3>
+        <p class="subtitle">{{ editandoId() ? 'Actualiza los datos del papu.' : 'Agrega un miembro a la base de datos.'
+          }}</p>
       </div>
+
+      <div class="form-group avatar-selection">
+        <label>Selecciona un Avatar Premium</label>
+        <div class="avatar-grid">
+          @for (av of avataresDisponibles; track av) {
+          <img [src]="av" class="avatar-option" [class.avatar-selected]="formUsuario().avatar === av"
+            (click)="formUsuario.update(u => ({ ...u, avatar: av }))" alt="Avatar">
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Nombre del Usuario</label>
+        <input type="text" [ngModel]="formUsuario().nombre"
+          (ngModelChange)="formUsuario.update(u => ({ ...u, nombre: $event }))" class="glass-input"
+          placeholder="Ej: Papu Supremo">
+      </div>
+
+      <div class="form-group">
+        <label>Rol Asignado</label>
+        <div class="custom-select-wrapper">
+          <select [ngModel]="formUsuario().rol" (ngModelChange)="formUsuario.update(u => ({ ...u, rol: $event }))"
+            class="glass-input glass-select">
+            <option value="Usuario">Usuario (Estándar)</option>
+            <option value="VIP">VIP</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-ghost" (click)="cerrarModal()" [disabled]="cargando()">Cancelar</button>
+
+        <button class="btn-neon" (click)="guardarUsuario()" [disabled]="cargando()">
+          {{ editandoId() ? 'Actualizar' : 'Guardar' }}
+          @if(cargando()) {
+          <span class="loader"></span> Guardando...
+          } @else {
+          Confirmar
+          }
+        </button>
+      </div>
+
     </div>
+  </div>
   }
 </div>

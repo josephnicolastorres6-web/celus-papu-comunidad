@@ -9,6 +9,7 @@ interface UsuarioMock {
   nombre: string;
   rol: string;
   fecha: string;
+  avatar?: string;
 }
 
 @Component({
@@ -29,7 +30,18 @@ export class DashboardComponent implements OnInit {
   modalVisible = signal<boolean>(false);
   
   // Objeto enlazado al formulario SPA
-  formUsuario = signal({ nombre: '', rol: 'Usuario' });
+  formUsuario = signal({ nombre: '', rol: 'Usuario', avatar: 'assets/avatars/avatar1.svg' });
+  
+  // ID del usuario que se está editando (null para modo creación)
+  editandoId = signal<number | null>(null);
+
+  // Catálogo visual de avatares dinámicos
+  avataresDisponibles = [
+    'assets/avatars/avatar1.svg',
+    'assets/avatars/avatar2.svg',
+    'assets/avatars/avatar3.svg',
+    'assets/avatars/avatar4.svg'
+  ];
 
   // Computed Signal: Generado automáticamente cuando 'usuarios' cambia
   totalUsuarios = computed(() => this.usuarios().length);
@@ -53,17 +65,32 @@ export class DashboardComponent implements OnInit {
   }
 
   abrirModal() {
+    this.editandoId.set(null); // Asegurar modo creación
+    this.formUsuario.set({ nombre: '', rol: 'Usuario', avatar: 'assets/avatars/avatar1.svg' });
+    this.modalVisible.set(true);
+  }
+
+  editarUsuario(user: UsuarioMock) {
+    this.editandoId.set(user.id);
+    this.formUsuario.set({
+      nombre: user.nombre,
+      rol: user.rol,
+      avatar: user.avatar || 'assets/avatars/avatar1.svg'
+    });
     this.modalVisible.set(true);
   }
 
   cerrarModal() {
     this.modalVisible.set(false);
-    // Reiniciar formulario
-    this.formUsuario.set({ nombre: '', rol: 'Usuario' });
+    // Reiniciar formulario implícitamente
+    this.formUsuario.set({ nombre: '', rol: 'Usuario', avatar: 'assets/avatars/avatar1.svg' });
+    this.editandoId.set(null);
   }
 
   guardarUsuario() {
     const actual = this.formUsuario();
+    const idEdicion = this.editandoId();
+
     if(actual.nombre.trim() === '') {
       alert('¡Debes escribir un nombre para el usuario!');
       return;
@@ -71,30 +98,53 @@ export class DashboardComponent implements OnInit {
 
     this.cargando.set(true);
     
-    // Conectando acción Guardar al Backend (/administradores o /registro).
-    this.http.post<any>(`${this.apiUrl}/administradores`, {
-      username: actual.nombre,
-      password: 'password123', // Contraseña automática para fines de prueba
-      rol: actual.rol
-    }).subscribe({
-      next: (res) => {
-        const nuevoUser: UsuarioMock = {
-          id: res.id || Date.now(),
-          nombre: actual.nombre,
-          rol: actual.rol,
-          fecha: new Date().toISOString().split('T')[0]
-        };
-        
-        this.usuarios.update(users => [nuevoUser, ...users]); // Agrega al inicio
-        this.cargando.set(false);
-        this.cerrarModal();
-      },
-      error: (err) => {
-        console.error('Error al guardar el usuario:', err);
-        alert('Ocurrió un error. Puede que ya exista o que no seas Admin Supremo.');
-        this.cargando.set(false);
-      }
-    });
+    if (idEdicion) {
+      // MODO EDICIÓN (PUT /usuarios/:id)
+      this.http.put(`${this.apiUrl}/usuarios/${idEdicion}`, {
+        username: actual.nombre,
+        avatar: actual.avatar
+      }).subscribe({
+        next: () => {
+          this.usuarios.update(users => users.map(u => 
+            u.id === idEdicion ? { ...u, nombre: actual.nombre, rol: actual.rol, avatar: actual.avatar } : u
+          ));
+          this.cargando.set(false);
+          this.cerrarModal();
+        },
+        error: (err) => {
+          console.error('Error al editar:', err);
+          alert('Error de actualización.');
+          this.cargando.set(false);
+        }
+      });
+
+    } else {
+      // MODO CREACIÓN (POST /administradores)
+      this.http.post<any>(`${this.apiUrl}/administradores`, {
+        username: actual.nombre,
+        password: 'password123', 
+        rol: actual.rol,
+        avatar: actual.avatar
+      }).subscribe({
+        next: (res) => {
+          const nuevoUser: UsuarioMock = {
+            id: res.id || Date.now(),
+            nombre: actual.nombre,
+            rol: actual.rol,
+            avatar: actual.avatar,
+            fecha: new Date().toISOString().split('T')[0]
+          };
+          this.usuarios.update(users => [nuevoUser, ...users]);
+          this.cargando.set(false);
+          this.cerrarModal();
+        },
+        error: (err) => {
+          console.error('Error al guardar el usuario:', err);
+          alert('Ocurrió un error. Puede que ya exista o que no seas Admin Supremo.');
+          this.cargando.set(false);
+        }
+      });
+    }
   }
   
   eliminarUsuario(id: number, nombre: string) {

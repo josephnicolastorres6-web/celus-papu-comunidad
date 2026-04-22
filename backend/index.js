@@ -174,7 +174,7 @@ const soloAdminSupremo = (req, res, next) => {
 
 // GET: Listar todos los usuarios para el Dashboard
 app.get('/usuarios', verificarToken, (req, res) => {
-    const query = 'SELECT id, username FROM administradores ORDER BY id DESC';
+    const query = 'SELECT id, username, avatar FROM administradores ORDER BY id DESC';
     db.query(query, (err, results) => {
         if (err) return res.status(500).json({ error: 'Error al obtener usuarios' });
         
@@ -182,12 +182,28 @@ app.get('/usuarios', verificarToken, (req, res) => {
         const usuariosFormateados = results.map(u => ({
             id: u.id,
             nombre: u.username,
+            avatar: u.avatar || 'assets/avatars/avatar1.svg', // Fallback anti-crasheo
             rol: 'Usuario', // Simulamos el rol ya que lo eliminamos de la BD
             fecha: new Date().toISOString().split('T')[0] // Fecha simulada temporal
         }));
         
         res.json(usuariosFormateados);
     });
+});
+
+// PUT: Actualizar usuario (RF05: Actualizar nombre y avatar)
+app.put('/usuarios/:id', verificarToken, async (req, res) => {
+    const { id } = req.params;
+    const { username, avatar } = req.body;
+    try {
+        const updateQuery = 'UPDATE administradores SET username = ?, avatar = ? WHERE id = ?';
+        db.query(updateQuery, [username, avatar, id], (err, result) => {
+            if (err) return res.status(500).json({ error: 'Error al actualizar usuario' });
+            res.json({ message: 'Usuario actualizado exitosamente' });
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error interno' });
+    }
 });
 
 // DELETE: Eliminar un usuario desde el Dashboard
@@ -210,8 +226,11 @@ app.post('/administradores', verificarToken, soloAdminSupremo, (req, res) => {
         try {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            const insertQuery = 'INSERT INTO administradores (username, password) VALUES (?, ?)';
-            db.query(insertQuery, [username, hashedPassword], (err, result) => {
+            
+            // RF03: Permitiendo inyección de avatar en creación
+            const avatarInyectado = req.body.avatar || 'assets/avatars/avatar1.svg';
+            const insertQuery = 'INSERT INTO administradores (username, password, avatar) VALUES (?, ?, ?)';
+            db.query(insertQuery, [username, hashedPassword, avatarInyectado], (err, result) => {
                 if (err) return res.status(500).json({ error: 'Error al crear el administrador' });
                 res.status(201).json({ message: 'Nuevo administrador creado con éxito', id: result.insertId });
             });
@@ -235,10 +254,15 @@ app.get('/comentarios', (req, res) => {
 
 app.post('/comentarios', verificarToken, soloAdminSupremo, (req, res) => {
     const { nombre, modelo, estrellas, texto, fecha, avatar } = req.body;
-    const query = 'INSERT INTO comentarios (nombre, modelo, estrellas, texto, fecha, avatar) VALUES (?, ?, ?, ?, ?, ?)';
-    db.query(query, [nombre, modelo, estrellas, texto, fecha, avatar], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error al crear el comentario' });
-        res.status(201).json({ id: result.insertId, ...req.body });
+    
+    // RF06: Vinculamos la tarea con el usuario autenticado
+    const admin_id = req.admin.id; 
+
+    // Guardar referencia en vez de saltarla
+    const query = 'INSERT INTO comentarios (admin_id, nombre, modelo, estrellas, texto, fecha, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    db.query(query, [admin_id, nombre, modelo, estrellas, texto, fecha, avatar], (err, result) => {
+        if (err) return res.status(500).json({ error: 'Error de integridad creando la tarea vinculada' });
+        res.status(201).json({ id: result.insertId, admin_id, ...req.body });
     });
 });
 
