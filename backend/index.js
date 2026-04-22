@@ -35,21 +35,25 @@ app.use(express.json());
 // ==========================================
 // Configuración de la conexión a MySQL (Actualizado para la nube y local)
 // ==========================================
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'celuspapu_db',
-    port: process.env.DB_PORT || 3306
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-// Conectar a la base de datos
-db.connect(err => {
+// Comprobamos la conexión del pool
+db.getConnection((err, connection) => {
     if (err) {
-        console.error('Error conectando a MySQL:', err);
+        console.error('❌ Error crítico conectando al Pool de MySQL:', err);
         return;
     }
-    console.log('¡Conectado exitosamente a la base de datos MySQL! 🗿🔌');
+    console.log('¡Conectado exitosamente al Pool de MySQL! 🗿🔌');
+    connection.release();
 });
 
 // ==========================================
