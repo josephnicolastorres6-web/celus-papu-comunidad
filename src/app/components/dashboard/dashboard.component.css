@@ -8,9 +8,9 @@
   /* Al definirlo en el host, envuelve todo el componente SPA */
   display: block;
   min-height: 100vh;
-  /* Fondo oscuro sofisticado (media noche) para realzar el cristal */
-  background: radial-gradient(circle at 10% 20%, rgb(14, 18, 38) 0%, rgb(6, 9, 20) 90%);
-  color: #fff;
+  /* Fondo asfalto casi negro Dark Minimalist */
+  background: #0f172a;
+  color: #e2e8f0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   padding: 2rem;
   box-sizing: border-box;
@@ -18,8 +18,8 @@
   /* Constantes de colores Neón elegidas */
   --neon-cyan: #00f3ff;
   --neon-violet: #a78bfa;
-  --glass-bg: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: #333333;
   --glass-blur: 16px;
 }
 
@@ -37,12 +37,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2.5rem;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
+  background: #1e1e1e;
+  border-bottom: 1px solid #333333;
   border-radius: 20px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
   margin-bottom: 3rem;
   transition: all 0.3s ease;
 }
@@ -252,12 +249,10 @@
 .glass-modal {
   width: 100%;
   max-width: 450px;
-  background: rgba(13, 17, 33, 0.6);
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-top-color: rgba(255, 255, 255, 0.3);
-  border-left-color: rgba(255, 255, 255, 0.3);
+  border: 1px solid #333333;
   border-radius: 24px;
   padding: 2.5rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
