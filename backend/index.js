@@ -261,13 +261,65 @@ app.put('/usuarios/:id', verificarToken, async (req, res) => {
     }
 });
 
-// DELETE: Eliminar un usuario desde el Dashboard
+// DELETE: Eliminar un administrador desde el Dashboard
 app.delete('/usuarios/:id', verificarToken, (req, res) => {
     const { id } = req.params;
     const query = 'DELETE FROM administradores WHERE id = ?';
     db.query(query, [id], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error al eliminar usuario' });
-        res.json({ message: 'Usuario eliminado exitosamente' });
+        if (err) return res.status(500).json({ error: 'Error al eliminar administrador' });
+        res.json({ message: 'Administrador eliminado exitosamente' });
+    });
+});
+
+// ==========================================
+// CRUD ADMINISTRATIVO DE CLIENTES (USUARIOS)
+// ==========================================
+
+// GET: Listar todos los clientes registrados
+app.get('/admin/usuarios', verificarToken, (req, res) => {
+    const query = 'SELECT id, nombre, email, avatar, direccion, ciudad FROM usuarios ORDER BY id DESC';
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: 'Error obteniendo lista de clientes.' });
+        res.json(results);
+    });
+});
+
+// POST: Crear cliente manualmente
+app.post('/admin/usuarios', verificarToken, async (req, res) => {
+    const { nombre, email, avatar } = req.body;
+    try {
+        const salt = await bcrypt.genSalt(10);
+        // Generamos una contraseña genérica para creación manual
+        const hashedPassword = await bcrypt.hash('papu123456', salt);
+        const query = 'INSERT INTO usuarios (nombre, email, password, avatar) VALUES (?, ?, ?, ?)';
+        
+        db.query(query, [nombre, email, hashedPassword, avatar || 'assets/avatars/ninja.svg'], (err, result) => {
+            if (err) return res.status(500).json({ error: 'Error al crear el cliente manualmente.' });
+            res.status(201).json({ id: result.insertId, nombre, email, avatar: avatar || 'assets/avatars/ninja.svg' });
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'Error en procesamiento.' });
+    }
+});
+
+// PUT: Actualizar cliente (Nombre y Avatar)
+app.put('/admin/usuarios/:id', verificarToken, (req, res) => {
+    const { id } = req.params;
+    const { nombre, avatar } = req.body;
+    const query = 'UPDATE usuarios SET nombre = ?, avatar = ? WHERE id = ?';
+    db.query(query, [nombre, avatar, id], (err, result) => {
+        if (err) return res.status(500).json({ error: 'Error al actualizar el perfil del cliente.' });
+        res.json({ message: 'Cliente actualizado correctamente.' });
+    });
+});
+
+// DELETE: Eliminar cliente
+app.delete('/admin/usuarios/:id', verificarToken, (req, res) => {
+    const { id } = req.params;
+    const query = 'DELETE FROM usuarios WHERE id = ?';
+    db.query(query, [id], (err, result) => {
+        if (err) return res.status(500).json({ error: 'Error al eliminar el cliente.' });
+        res.json({ message: 'Cliente eliminado de la base de datos.' });
     });
 });
 

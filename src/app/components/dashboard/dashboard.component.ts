@@ -12,10 +12,12 @@ interface UsuarioMock {
   avatar?: string;
 }
 
+import { GestionUsuariosAdminComponent } from './gestion-usuarios-admin/gestion-usuarios-admin.component';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, GestionUsuariosAdminComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })

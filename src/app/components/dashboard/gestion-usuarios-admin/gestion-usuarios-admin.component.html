@@ -1,0 +1,91 @@
+<div class="gestion-container glass-card">
+  <div class="card-header">
+    <div class="header-info">
+      <h3>👥 Gestión de Clientes Registrados</h3>
+      <p>Administra los perfiles de la comunidad Celus Papu</p>
+    </div>
+    <button class="btn-neon-plus" (click)="abrirModal()">+ Nuevo Cliente</button>
+  </div>
+
+  <div class="table-wrapper">
+    @if (cargando()) {
+      <div class="loader-container">
+        <span class="loader"></span>
+      </div>
+    } @else if (listaUsuarios().length === 0) {
+      <div class="empty-state">No hay clientes registrados aún.</div>
+    } @else {
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>Avatar</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Ubicación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of listaUsuarios(); track user.id) {
+            <tr class="user-row animate-fade">
+              <td>
+                <img [src]="user.avatar" class="table-avatar" alt="Avatar">
+              </td>
+              <td><strong>{{ user.nombre }}</strong></td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.ciudad || 'N/A' }}</td>
+              <td>
+                <div class="actions-group">
+                  <button class="btn-edit" (click)="abrirModal(user)">✏️</button>
+                  <button class="btn-delete" (click)="eliminar(user.id)">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <!-- MODAL ANIMADO CON BLUR (SPA TYPE) -->
+  @if (modalVisible()) {
+    <div class="modal-overlay animate-fade" (click)="cerrarModal()">
+      <div class="modal-content animate-slide" (click)="$event.stopPropagation()">
+        <header>
+          <h2>{{ editandoId() ? 'Editar Perfil' : 'Alta de Cliente Manual' }}</h2>
+          <p>{{ editandoId() ? 'Actualiza los datos del cliente VIP' : 'Crea un acceso rápido para un nuevo cliente' }}</p>
+        </header>
+
+        <form (submit)="guardar(); $event.preventDefault()">
+          
+          <div class="avatar-selector">
+            <label>Avatar Dinámico</label>
+            <div class="avatar-grid">
+              @for (av of avatares; track av) {
+                <img [src]="av" 
+                     class="avatar-option" 
+                     [class.active]="formUser().avatar === av"
+                     (click)="formUser.update(u => ({ ...u, avatar: av }))">
+              }
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Nombre Completo</label>
+            <input type="text" [(ngModel)]="formUser().nombre" name="nombre" placeholder="Nombre completo" required>
+          </div>
+
+          <div class="input-group" *ngIf="!editandoId()">
+            <label>Correo Electrónico</label>
+            <input type="email" [(ngModel)]="formUser().email" name="email" placeholder="email@ejemplo.com" required>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
+            <button type="submit" class="btn-save-neon">{{ editandoId() ? 'Actualizar Datos' : 'Registrar Cliente' }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
