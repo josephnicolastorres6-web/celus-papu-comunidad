@@ -12,6 +12,25 @@
 
   <!-- Contenido Central: Cuadrícula SPA -->
   <main class="glass-content">
+
+    <!-- Megáfono (Muro) -->
+    <div class="megafono-card glass-card">
+      <div class="megafono-header">
+        <h3>📢 Megáfono de la Comunidad</h3>
+        <p>Publica un anuncio directamente en el muro público.</p>
+      </div>
+      <div class="megafono-body" style="width: 100%;">
+        <textarea class="glass-input area-megafono" 
+                  [ngModel]="textoMegafono()" 
+                  (ngModelChange)="textoMegafono.set($event)" 
+                  placeholder="¿Qué quieres anunciar a los papus...?"></textarea>
+        <button class="btn-neon" 
+                (click)="publicarEnMuro()" 
+                [disabled]="publicandoMegafono()">
+          {{ publicandoMegafono() ? 'Enviando...' : 'Publicar Anuncio' }}
+        </button>
+      </div>
+    </div>
     <div class="glass-grid">
       @for (user of usuarios(); track user.id) {
       <div class="glass-card">

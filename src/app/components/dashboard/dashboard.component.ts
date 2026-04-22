@@ -46,6 +46,12 @@ export class DashboardComponent implements OnInit {
   // Computed Signal: Generado automáticamente cuando 'usuarios' cambia
   totalUsuarios = computed(() => this.usuarios().length);
 
+  // ==========================================
+  // ESTADO DEL MEGÁFONO (Muro Público)
+  // ==========================================
+  textoMegafono = signal<string>('');
+  publicandoMegafono = signal<boolean>(false);
+
   ngOnInit() {
     this.cargarUsuarios();
   }
@@ -159,5 +165,35 @@ export class DashboardComponent implements OnInit {
         }
       });
     }
+  }
+
+  publicarEnMuro() {
+    const texto = this.textoMegafono().trim();
+    if (!texto) {
+      alert('¡Escribe algo en el Megáfono!');
+      return;
+    }
+    
+    this.publicandoMegafono.set(true);
+    
+    this.http.post(`${this.apiUrl}/comentarios`, {
+      nombre: 'Administrador', // Backend lo sobrescribe o ignora con el JOIN
+      modelo: 'Anuncio Oficial', 
+      estrellas: 5,
+      texto: texto,
+      fecha: new Date().toISOString().split('T')[0],
+      avatar: 'avatar1.svg' // Obsoleto por el JOIN
+    }).subscribe({
+      next: () => {
+        this.textoMegafono.set('');
+        this.publicandoMegafono.set(false);
+        alert('¡Publicado en la comunidad exitosamente!');
+      },
+      error: (err) => {
+        console.error('Error publicando:', err);
+        alert('Error al publicar. Revisa tus permisos o tu Token JWT.');
+        this.publicandoMegafono.set(false);
+      }
+    });
   }
 }
