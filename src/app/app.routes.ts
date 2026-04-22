@@ -5,10 +5,15 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { DetalleProductoComponent } from './components/detalle-producto/detalle-producto.component';
 import { LoginClienteComponent } from './components/login-cliente/login-cliente.component';
 import { RegistroClienteComponent } from './components/registro-cliente/registro-cliente.component';
+import { CatalogoComponent } from './components/catalogo/catalogo.component';
 import { authGuard } from './auth-guard'; // 👈 Agrégale el guion '-'
+
 export const routes: Routes = [
-    // Si entras a localhost:4200 sin nada, carga los comentarios (Invitado)
+    // Si entras a localhost:4200 sin nada, carga los comentarios (Comunidad)
     { path: '', component: ComentariosComponent },
+    
+    // Nueva ruta para el Catálogo de Productos
+    { path: 'productos', component: CatalogoComponent },
     
     // Auth Clientes (STANDALONE PAGES)
     { path: 'login', component: LoginClienteComponent },

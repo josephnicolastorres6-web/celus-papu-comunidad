@@ -74,7 +74,7 @@ export class AuthService {
     console.log('🚪 Sesión cerrada exitosamente en Celus Papu');
   }
 
-  // --- MÓDULO DE CLIENTES ---
+  // --- MÓDULO DE CLIENTES & SOCIAL ---
   loginCliente(email: string, pass: string) {
     return this.http.post<any>(`${this.apiUrl}/api/usuarios/login`, { email, password: pass })
       .pipe(
@@ -90,6 +90,33 @@ export class AuthService {
 
   registroCliente(datos: any) {
     return this.http.post<any>(`${this.apiUrl}/api/usuarios/registro`, datos);
+  }
+
+  // NUEVO: Registro de Administradores (por Admins)
+  registrarAdmin(datos: any) {
+    const token = this.getToken();
+    return this.http.post<any>(`${this.apiUrl}/api/admin/registrar`, datos, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  }
+
+  // NUEVO: Actualizar Perfil (Nombre y Avatar)
+  actualizarPerfil(nombre: string, avatar: string) {
+    const isClient = this.estaLogueadoCliente();
+    const token = isClient ? localStorage.getItem('token_cliente') : this.getToken();
+
+    return this.http.put<any>(`${this.apiUrl}/api/usuario/perfil`, { nombre, avatar }, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).pipe(
+      tap(() => {
+        // Actualizamos el signal local
+        const current = this.usuarioActual();
+        if (current) {
+          this.usuarioActual.set({ ...current, nombre, avatar });
+          // Si es necesario, regenerar el payload del token o simplemente confiar en el signal
+        }
+      })
+    );
   }
 
   logoutCliente() {

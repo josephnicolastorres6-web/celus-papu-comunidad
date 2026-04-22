@@ -1,0 +1,30 @@
+<div class="catalogo-container">
+  <header class="catalogo-header">
+    <h1 class="neon-title">Catálogo de Alta Gama</h1>
+    <button class="btn-back" routerLink="/">Volver a la Comunidad</button>
+  </header>
+
+  <div *ngIf="cargando()" class="loader-container">
+    <div class="loader"></div>
+  </div>
+
+  <div *ngIf="!cargando()" class="grid-productos">
+    @for (prod of catalogo(); track prod.id) {
+      <div class="product-card glass">
+        <div class="prod-badge">Premium</div>
+        <div class="prod-img-box">
+          <img [src]="prod.imagen_url" [alt]="prod.nombre">
+        </div>
+        <div class="prod-info">
+          <span class="prod-marca">{{ prod.marca }}</span>
+          <h3>{{ prod.nombre }}</h3>
+          <p class="prod-specs">{{ prod.especificaciones }}</p>
+          <div class="prod-footer">
+            <span class="prod-price">${{ prod.precio }}</span>
+            <button class="btn-buy" (click)="agregar(prod)">Añadir al Carrito</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

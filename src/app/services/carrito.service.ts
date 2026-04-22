@@ -58,11 +58,11 @@ export class CarritoService {
     });
   }
 
-  agregarItem(producto: ProductoFeed) {
+  agregarAlCarrito(producto: ProductoFeed) {
     this.items.update(currentItems => {
-      const match = currentItems.find(i => i.id === producto.id);
+      const match = currentItems.find(i => (i as any).id === producto.id);
       if (match) {
-        return currentItems.map(i => i.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i);
+        return currentItems.map(i => (i as any).id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i);
       } else {
         return [...currentItems, { ...producto, cantidad: 1 }];
       }
@@ -74,8 +74,8 @@ export class CarritoService {
     this.toastService.mostrar(`Has añadido ${producto.nombre} a tu carrito.`, 'success');
   }
 
-  quitarItem(id: number) {
-    this.items.update(currentItems => currentItems.filter(i => i.id !== id));
+  quitarDelCarrito(id: number) {
+    this.items.update(currentItems => currentItems.filter(i => (i as any).id !== id));
   }
   
   finalizarCompra() {

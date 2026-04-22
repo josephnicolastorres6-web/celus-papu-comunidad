@@ -85,7 +85,7 @@
                         <h4>🛒 Hardware en este paquete:</h4>
                         <ul class="detalle-list">
                           @for (prod of pedido.productos; track prod.nombre) {
-                            <li><span class="cantidad">x{{ prod.cantidad }}</span> {{ prod.nombre }} - $\{{ prod.precio }}</li>
+                            <li><span class="cantidad">x{{ prod.cantidad }}</span> {{ prod.nombre }} - ${{ prod.precio }}</li>
                           }
                         </ul>
                       </div>
@@ -112,7 +112,6 @@
         </div>
         <div class="card-info">
           <h3 class="card-title">{{ user.nombre }}</h3>
-          <!-- Badge dinámico usando Signal values -->
           <span class="badge" [class.badge-admin]="user.rol === 'Administrador'" [class.badge-vip]="user.rol === 'VIP'"
             [class.badge-user]="user.rol === 'Usuario'">
             {{ user.rol }}
@@ -140,61 +139,56 @@
 
   <!-- Modal Glassmorphism SPA -->
   @if (modalVisible()) {
-  <div class="glass-overlay" (click)="cerrarModal()">
-    <div class="glass-modal" (click)="$event.stopPropagation()">
-
-      <div class="modal-header">
-        <h3>{{ editandoId() ? '✏️ Editar Usuario' : '👤 Nuevo Usuario' }}</h3>
-        <p class="subtitle">{{ editandoId() ? 'Actualiza los datos del papu.' : 'Agrega un miembro a la base de datos.'
-          }}</p>
-      </div>
-
-      <div class="form-group avatar-selection">
-        <label>Selecciona un Avatar Premium</label>
-        <div class="avatar-grid">
-          @for (av of avataresDisponibles; track av) {
-          <img [src]="av" class="avatar-option" [class.avatar-selected]="formUsuario().avatar === av"
-            (click)="formUsuario.update(u => ({ ...u, avatar: av }))" alt="Avatar">
-          }
+    <div class="glass-overlay" (click)="cerrarModal()">
+      <div class="glass-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ editandoId() ? '✏️ Editar Usuario' : '👤 Nuevo Usuario' }}</h3>
+          <p class="subtitle">{{ editandoId() ? 'Actualiza los datos del papu.' : 'Agrega un miembro a la base de datos.' }}</p>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Nombre del Usuario</label>
-        <input type="text" [ngModel]="formUsuario().nombre"
-          (ngModelChange)="formUsuario.update(u => ({ ...u, nombre: $event }))" class="glass-input"
-          placeholder="Ej: Papu Supremo">
-      </div>
-
-      <div class="form-group">
-        <label>Rol Asignado</label>
-        <div class="custom-select-wrapper">
-          <select [ngModel]="formUsuario().rol" (ngModelChange)="formUsuario.update(u => ({ ...u, rol: $event }))"
-            class="glass-input glass-select">
-            <option value="Usuario">Usuario (Estándar)</option>
-            <option value="VIP">VIP</option>
-            <option value="Administrador">Administrador</option>
-          </select>
+        <div class="form-group avatar-selection">
+          <label>Selecciona un Avatar Premium</label>
+          <div class="avatar-grid">
+            @for (av of avataresDisponibles; track av) {
+              <img [src]="av" class="avatar-option" [class.avatar-selected]="formUsuario().avatar === av"
+                (click)="formUsuario.update(u => ({ ...u, avatar: av }))" alt="Avatar">
+            }
+          </div>
         </div>
-      </div>
 
-      <div class="modal-actions">
-        <button class="btn-ghost" (click)="cerrarModal()" [disabled]="cargando()">Cancelar</button>
+        <div class="form-group">
+          <label>Nombre del Usuario</label>
+          <input type="text" [ngModel]="formUsuario().nombre"
+            (ngModelChange)="formUsuario.update(u => ({ ...u, nombre: $event }))" class="glass-input"
+            placeholder="Ej: Papu Supremo">
+        </div>
 
-        <button class="btn-neon" (click)="guardarUsuario()" [disabled]="cargando()">
-          {{ editandoId() ? 'Actualizar' : 'Guardar' }}
-          @if(cargando()) {
-          <span class="loader"></span> Guardando...
-          } @else {
-          Confirmar
-          }
-        </button>
+        <div class="form-group">
+          <label>Rol Asignado</label>
+          <div class="custom-select-wrapper">
+            <select [ngModel]="formUsuario().rol" (ngModelChange)="formUsuario.update(u => ({ ...u, rol: $event }))"
+              class="glass-input glass-select">
+              <option value="Usuario">Usuario (Estándar)</option>
+              <option value="VIP">VIP</option>
+              <option value="Administrador">Administrador</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-ghost" (click)="cerrarModal()" [disabled]="cargando()">Cancelar</button>
+          <button class="btn-neon" (click)="guardarUsuario()" [disabled]="cargando()">
+            {{ editandoId() ? 'Actualizar' : 'Guardar' }}
+            @if(cargando()) {
+              <span class="loader"></span> Guardando...
+            } @else {
+              Confirmar
+            }
+          </button>
+        </div>
       </div>
     </div>
   }
 
-  <!-- ==========================================
-       NUEVO: GESTIÓN DE CLIENTES VIP (NUEVA TABLA)
-       ========================================== -->
   <app-gestion-usuarios-admin />
 </div>

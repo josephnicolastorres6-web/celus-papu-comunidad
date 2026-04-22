@@ -1,158 +1,188 @@
-<div class="muro-container">
-  <!-- Cabecera principal modificada para Carrito -->
-  <header class="encabezado-gestor">
-    <div class="titulos-nav-central">
-      <div class="logo-circulo"></div>
-      <h1 class="neon-title">Celus Papu Comunidad</h1>
+<div class="dashboard-wrapper">
+  
+  <!-- BARRA LATERAL (SIDEBAR) -->
+  <aside class="sidebar-miembros">
+    <div class="sidebar-header">
+      <img src="assets/avatars/ninja.svg" alt="Logo" class="logo-mini">
+      <h3>Comunidad</h3>
     </div>
     
-    <div class="botones-derecha">
-      <!-- Botón Flotante/Navegación del Carrito con Badge -->
-      <button class="btn-nav neon-btn btn-cart" (click)="carritoService.togglePanel()">
-        🛒 Carrito 
-        @if(carritoService.itemCount() > 0) {
-          <span class="cart-badge">{{ carritoService.itemCount() }}</span>
-        }
-      </button>
-
-      <!-- SESIÓN DE ADMINISTRADOR -->
-      @if (authService.isAdmin()) {
-        <button class="btn-nav neon-btn" routerLink="/dashboard" style="margin-left: 15px;">Dashboard Matrix</button>
-        <button class="btn-nav" (click)="authService.logout()" style="margin-left: 10px; color: #ff4d4d; border-color: #ff4d4d;">Salir</button>
-      } 
-      
-      <!-- SESIÓN DE CLIENTE (NUEVO) -->
-      @else if (authService.usuarioActual()) {
-        <div class="user-profile-nav">
-          <img [src]="authService.usuarioActual().avatar" class="nav-avatar" alt="Avatar">
-          <div class="user-info-text">
-            <span class="user-name">{{ authService.usuarioActual().nombre }}</span>
-            <span class="badge-vip">Papu VIP 💎</span>
+    <div class="lista-miembros">
+      @for (m of miembros(); track m.id) {
+        <div class="miembro-card" [class.is-admin]="m.rol === 'admin'">
+          <div class="avatar-status">
+            <img [src]="m.avatar" [alt]="m.username" class="avatar-sidebar">
+            <span class="status-dot" [class.online]="m.rol === 'admin' || m.ultima_conexion"></span>
           </div>
-          <button class="btn-logout-client" (click)="authService.logoutCliente()" title="Cerrar Sesión">🚪</button>
-        </div>
-      }
-
-      <!-- INVITADO -->
-      @else {
-        <div class="guest-actions">
-          <button class="btn-nav" routerLink="/login" style="margin-left: 15px;">Ingresar</button>
-          <button class="btn-nav neon-btn" routerLink="/registro" style="margin-left: 10px;">Registrarse</button>
+          <div class="miembro-info">
+            <span class="m-name">{{ m.username }}</span>
+            <span class="m-status">{{ calcularTiempo(m.ultima_conexion) }}</span>
+          </div>
+          <span *ngIf="m.rol === 'admin'" class="admin-badge">Admin</span>
         </div>
       }
     </div>
-  </header>
+  </aside>
 
-  <!-- CATÁLOGO DE PRODUCTOS - NUEVO -->
-  <section class="catalogo-section">
-    <h2 class="catalogo-title">🏆 Catálogo de Alta Gama</h2>
-    <div class="catalogo-grid">
-      @if (cargandoCatalogo()) {
-        <div class="loader-container">
-          <span class="loader"></span>
-        </div>
-      } @else {
-        @for (prod of catalogo(); track prod.id) {
-          <div class="glass-product-card">
-            <div class="prod-img-wrapper">
-              <img [src]="prod.imagen_url" alt="{{ prod.nombre }}" class="prod-img">
-            </div>
-            <div class="prod-info">
-              <span class="prod-marca">{{ prod.marca }}</span>
-              <h3 class="prod-name">{{ prod.nombre }}</h3>
-              <p class="prod-specs">{{ prod.especificaciones }}</p>
-              <div class="prod-footer">
-                <span class="prod-price">${{ prod.precio }}</span>
-                <div>
-                  <button class="btn-buy neon-btn" [routerLink]="['/producto', prod.id]" style="margin-right: 10px;">Ver Detalles</button>
-                  <button class="btn-buy" style="border-color: #10b981; color: #10b981;" (click)="carritoService.agregarItem(prod)">Añadir 🛒</button>
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="content-muro">
+    
+    <!-- HEADER DINÁMICO -->
+    <header class="main-header glass">
+      <div class="header-left">
+        <h2 class="neon-title">Celus Papu Comunidad</h2>
+      </div>
+
+      <div class="header-actions">
+        <!-- BOTONES ADMIN -->
+        <ng-container *ngIf="authService.isAdmin()">
+          <button class="btn-action" (click)="showPerfilModal.set(true)">Mi Perfil</button>
+          <button class="btn-action neon-cyan" (click)="showAdminModal.set(true)">Registrar Admin</button>
+          <button class="btn-action" routerLink="/dashboard">Gestionar Admins</button>
+          <button class="btn-action" routerLink="/dashboard">Gestionar Usuarios</button>
+        </ng-container>
+
+        <!-- BOTONES CLIENTE -->
+        <ng-container *ngIf="authService.estaLogueadoCliente()">
+          <button class="btn-action neon-cyan" routerLink="/productos">Productos</button>
+          <button class="btn-action" (click)="showNuevoMensajeModal.set(true)">Mensajes</button>
+          <button class="btn-action" (click)="showPerfilModal.set(true)">Mi Perfil</button>
+        </ng-container>
+
+        <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+      </div>
+    </header>
+
+    <!-- FEED DE MENSAJES (ESTILO TAREAS) -->
+    <section class="muro-feed">
+      <div class="feed-header">
+        <h1>{{ authService.isAdmin() ? 'Muro Global de Mensajes' : 'Mis Mensajes' }}</h1>
+        <button *ngIf="authService.estaLogueadoCliente()" class="btn-plus" (click)="showNuevoMensajeModal.set(true)">+ Nuevo Mensaje</button>
+        <button *ngIf="authService.isAdmin()" class="btn-plus neon-green" (click)="showNuevoMensajeModal.set(true)">📢 Aviso Oficial</button>
+      </div>
+
+      <div *ngIf="cargando()" class="loader-container">
+        <div class="loader"></div>
+      </div>
+
+      <div *ngIf="!cargando()" class="task-grid">
+        @for (item of feedMuro(); track item.id) {
+          <div class="task-card glass">
+            <div class="task-header">
+              <div class="user-id">
+                <img [src]="item.avatar" [alt]="item.username" class="avatar-card">
+                <div class="user-meta">
+                  <span class="user-name">{{ item.username }} <span class="model-tag">{{ item.modelo }}</span></span>
+                  <span class="time-stamp">{{ item.fecha }}</span>
                 </div>
               </div>
+              <div class="task-stars">
+                @for (star of [1,2,3,4,5]; track star) {
+                  <span class="star" [class.filled]="star <= item.estrellas">★</span>
+                }
+              </div>
+            </div>
+
+            <div class="task-body">
+              <p>{{ item.texto }}</p>
+            </div>
+
+            <div class="task-footer" *ngIf="authService.isAdmin()">
+              <button class="btn-task green">Enviado</button>
+              <button class="btn-task blue">Comentar</button>
+              <button class="btn-task red" (click)="eliminarMensaje(item.id)">Eliminar</button>
             </div>
           </div>
         }
-      }
-    </div>
-  </section>
-  <hr style="border-color: #333; margin: 3rem 0;">
-
-  <!-- MURO DE LA COMUNIDAD (Original) -->
-  <main class="feed-main">
-    <div class="cabecera-derecha">
-      <h2>Muro Público de la Comunidad 🗿</h2>
-
-      <button *ngIf="authService.isAdmin()" class="btn-nav neon-btn" (click)="toggleFormulario()">
-        {{ mostrarFormulario() ? 'Cerrar' : '+ Publicar Reseña' }}
-      </button>
-    </div>
-
-    @if (mostrarFormulario() && authService.isAdmin()) {
-    <app-formulario (cerrar)="toggleFormulario()" />
-    }
-
-    <div class="wall-grid">
-      @if (cargando()) {
-      <div class="loader-container">
-        <span class="loader"></span>
       </div>
-      } @else {
-      @for (resena of feedMuro(); track resena.id) {
-      <div class="glass-wall-card">
-        <div class="wall-card-header">
-          <img [src]="resena.avatar" alt="Avatar" class="wall-avatar">
-          <div class="wall-user-info">
-            <span class="wall-username">{{ resena.username }}</span>
-            <span class="wall-date">{{ resena.fecha }}</span>
-          </div>
-        </div>
-        <div class="wall-card-body">
-          <p class="wall-text">"{{ resena.texto }}"</p>
-        </div>
-      </div>
-      }
-      }
-    </div>
+    </section>
+
   </main>
 
-  <!-- ==========================================
-       PANEL LATERAL (OFFCANVAS) - CARRITO
-       ========================================== -->
-  @if (carritoService.panelVisible()) {
-  <div class="cart-overlay" (click)="carritoService.togglePanel()">
-    <div class="cart-panel" (click)="$event.stopPropagation()">
-      <div class="cart-header">
-        <h2>Tus Compras 🛒</h2>
-        <button class="btn-cerrar-cart" (click)="carritoService.togglePanel()">✖</button>
-      </div>
-      <div class="cart-body">
-        @if (carritoService.items().length === 0) {
-          <div class="cart-empty">
-            <p>El carrito está vacío. ¡Añade equipos desde el Catálogo de Alta Gama!</p>
-          </div>
-        } @else {
-          <div class="cart-items-list">
-            @for (item of carritoService.items(); track item.id) {
-              <div class="cart-item-card glass-card">
-                <div class="cart-item-info">
-                  <h4>{{ item.nombre }}</h4>
-                  <p class="cart-item-price">${{ item.precio | number:'1.2-2' }} x {{ item.cantidad }}</p>
-                </div>
-                <button class="btn-delete-item" (click)="carritoService.quitarItem(item.id)">🗑️</button>
-              </div>
+  <!-- =========================================
+       MODALES SPA
+       ========================================= -->
+
+  <!-- MODAL: MI PERFIL (EDITAR) -->
+  <div class="modal-overlay" *ngIf="showPerfilModal()" (click)="showPerfilModal.set(false)">
+    <div class="modal-card glass" (click)="$event.stopPropagation()">
+      <h2>Mi Perfil VIP</h2>
+      <div class="profile-edit">
+        <div class="avatar-selection">
+          <label>Elige tu Avatar:</label>
+          <div class="avatares-grid">
+            @for (av of (authService.isAdmin() ? avataresAdmin : avatares); track av) {
+              <img [src]="av" [class.selected]="perfilForm.avatar === av" (click)="perfilForm.avatar = av">
             }
           </div>
-        }
-      </div>
-      <div class="cart-footer">
-        <div class="cart-total-row">
-          <span>Total a pagar:</span>
-          <span class="total-price">${{ carritoService.total() | number:'1.2-2' }}</span>
         </div>
-        <button class="btn-checkout neon-btn" (click)="carritoService.finalizarCompra()">
-          💳 Proceder al Pago
-        </button>
+        <div class="input-group">
+          <label>Nombre:</label>
+          <input type="text" [(ngModel)]="perfilForm.nombre" placeholder="Tu nombre...">
+        </div>
+        <div class="modal-footer">
+          <button class="btn-save" (click)="actualizarPerfil()">Guardar Cambios</button>
+        </div>
       </div>
     </div>
   </div>
-  }
+
+  <!-- MODAL: REGISTRAR ADMIN -->
+  <div class="modal-overlay" *ngIf="showAdminModal()" (click)="showAdminModal.set(false)">
+    <div class="modal-card glass" (click)="$event.stopPropagation()">
+      <h2>Registrar Nuevo Administrador</h2>
+      <div class="admin-form">
+        <div class="input-group">
+          <label>Username:</label>
+          <input type="text" [(ngModel)]="adminForm.username" placeholder="Escribe el nombre de usuario">
+        </div>
+        <div class="input-group">
+          <label>Password:</label>
+          <input type="password" [(ngModel)]="adminForm.password" placeholder="Define la clave de poder">
+        </div>
+        <div class="avatar-selection">
+          <label>Avatar:</label>
+          <div class="avatares-grid">
+            @for (av of avataresAdmin; track av) {
+              <img [src]="av" [class.selected]="adminForm.avatar === av" (click)="adminForm.avatar = av">
+            }
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-save neon-cyan-bg" (click)="registrarAdmin()">Registrar Maestro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVO MENSAJE -->
+  <div class="modal-overlay" *ngIf="showNuevoMensajeModal()" (click)="showNuevoMensajeModal.set(false)">
+    <div class="modal-card glass" (click)="$event.stopPropagation()">
+      <h2>{{ authService.isAdmin() ? 'Publicar Aviso Oficial' : 'Nuevo Mensaje a la Comunidad' }}</h2>
+      <div class="mensaje-form">
+        <div class="input-group">
+          <label>Modelo / Asunto:</label>
+          <input type="text" [(ngModel)]="mensajeForm.modelo" placeholder="Ej: iPhone 15 Pro">
+        </div>
+        <div class="input-group">
+          <label>Mensaje:</label>
+          <textarea [(ngModel)]="mensajeForm.texto" rows="4" placeholder="Escribe aquí..."></textarea>
+        </div>
+        <div class="input-group">
+          <label>Calificación (Estrellas):</label>
+          <select [(ngModel)]="mensajeForm.estrellas">
+            <option [value]="5">5 Estrellas</option>
+            <option [value]="4">4 Estrellas</option>
+            <option [value]="3">3 Estrellas</option>
+            <option [value]="2">2 Estrellas</option>
+            <option [value]="1">1 Estrella</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-save neon-green-bg" (click)="enviarMensaje()">{{ authService.isAdmin() ? 'Difundir Aviso' : 'Publicar Mensaje' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>

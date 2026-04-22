@@ -184,6 +184,9 @@ app.post('/api/usuarios/login', (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // ACTUALIZAR ÚLTIMA CONEXIÓN
+        db.query('UPDATE usuarios SET ultima_conexion = CURRENT_TIMESTAMP WHERE id = ?', [usuario.id]);
+
         res.json({ 
             message: '¡Bienvenido a Celus Papu!', 
             token, 
@@ -314,12 +317,65 @@ app.put('/admin/usuarios/:id', verificarToken, (req, res) => {
 });
 
 // DELETE: Eliminar cliente
-app.delete('/admin/usuarios/:id', verificarToken, (req, res) => {
+app.delete('/admin/usuarios/:id', verificarToken, soloAdminSupremo, (req, res) => {
     const { id } = req.params;
     const query = 'DELETE FROM usuarios WHERE id = ?';
     db.query(query, [id], (err, result) => {
         if (err) return res.status(500).json({ error: 'Error al eliminar el cliente.' });
         res.json({ message: 'Cliente eliminado de la base de datos.' });
+    });
+});
+
+// NUEVO: Registrar administrador desde otro administrador
+app.post('/api/admin/registrar', verificarToken, soloAdminSupremo, async (req, res) => {
+    const { username, password, avatar } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Faltan datos.' });
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        const insertQuery = 'INSERT INTO administradores (username, password, avatar) VALUES (?, ?, ?)';
+        db.query(insertQuery, [username, hashedPassword, avatar || 'assets/avatars/avatar1.svg'], (err) => {
+            if (err) return res.status(500).json({ error: 'Error al registrar administrador.' });
+            res.status(201).json({ message: 'Administrador registrado con éxito.' });
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'Error interno.' });
+    }
+});
+
+// NUEVO: Perfil de usuario (Editar nombre y avatar)
+app.put('/api/usuario/perfil', verificarToken, (req, res) => {
+    const { nombre, avatar } = req.body;
+    const id = req.user.id;
+    const isClient = req.user.role === 'cliente';
+
+    if (isClient) {
+        const query = 'UPDATE usuarios SET nombre = ?, avatar = ? WHERE id = ?';
+        db.query(query, [nombre, avatar, id], (err) => {
+            if (err) return res.status(500).json({ error: 'Error al actualizar perfil.' });
+            res.json({ message: 'Perfil actualizado.' });
+        });
+    } else {
+        const query = 'UPDATE administradores SET username = ?, avatar = ? WHERE id = ?';
+        db.query(query, [nombre, avatar, id], (err) => {
+            if (err) return res.status(500).json({ error: 'Error al actualizar perfil admin.' });
+            res.json({ message: 'Perfil admin actualizado.' });
+        });
+    }
+});
+
+// NUEVO: Lista de miembros para el Sidebar con status
+app.get('/api/miembros', (req, res) => {
+    const query = `
+        SELECT id, nombre as username, avatar, ultima_conexion, 'cliente' as rol FROM usuarios
+        UNION
+        SELECT id, username, avatar, NULL as ultima_conexion, 'admin' as rol FROM administradores
+        ORDER BY ultima_conexion DESC
+    `;
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: 'Error al obtener miembros.' });
+        res.json(results);
     });
 });
 
@@ -351,14 +407,26 @@ app.post('/administradores', verificarToken, soloAdminSupremo, (req, res) => {
 // ENDPOINTS DE COMENTARIOS / RESEÑAS
 // ==========================================
 
-app.get('/comentarios', (req, res) => {
-    // RF: Backend optimizado - Un JOIN maestro para sacar el Muro completo
-    const query = `
-      SELECT c.id, c.texto, c.fecha, c.estrellas, a.username, a.avatar 
+app.get('/comentarios', verificarToken, (req, res) => {
+    const isClient = req.user.role === 'cliente';
+    const userId = req.user.id;
+
+    let query = `
+      SELECT c.id, c.texto, c.fecha, c.estrellas, 
+             COALESCE(a.username, u.nombre) as username, 
+             COALESCE(a.avatar, u.avatar) as avatar,
+             c.modelo, c.usuario_id
       FROM comentarios c 
-      JOIN administradores a ON c.admin_id = a.id 
-      ORDER BY c.id DESC
+      LEFT JOIN administradores a ON c.admin_id = a.id 
+      LEFT JOIN usuarios u ON c.usuario_id = u.id
     `;
+
+    if (isClient) {
+        query += ` WHERE c.usuario_id = ${userId}`;
+    }
+
+    query += ` ORDER BY c.id DESC`;
+
     db.query(query, (err, results) => {
         if (err) {
             console.error('Error JOIN muro:', err);
@@ -368,17 +436,25 @@ app.get('/comentarios', (req, res) => {
     });
 });
 
-app.post('/comentarios', verificarToken, soloAdminSupremo, (req, res) => {
-    const { nombre, modelo, estrellas, texto, fecha, avatar } = req.body;
-    
-    // RF06: Vinculamos la tarea con el usuario autenticado
-    const admin_id = req.admin.id; 
+app.post('/comentarios', verificarToken, (req, res) => {
+    const { texto, estrellas, modelo, avatar, nombre } = req.body;
+    const role = req.user.role;
+    const userId = req.user.id;
 
-    // Guardar referencia en vez de saltarla
-    const query = 'INSERT INTO comentarios (admin_id, nombre, modelo, estrellas, texto, fecha, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    db.query(query, [admin_id, nombre, modelo, estrellas, texto, fecha, avatar], (err, result) => {
-        if (err) return res.status(500).json({ error: 'Error de integridad creando la tarea vinculada' });
-        res.status(201).json({ id: result.insertId, admin_id, ...req.body });
+    const fecha = new Date().toLocaleString();
+    let query, params;
+
+    if (role === 'admin') {
+        query = 'INSERT INTO comentarios (admin_id, nombre, modelo, estrellas, texto, fecha, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        params = [userId, nombre, modelo, estrellas, texto, fecha, avatar];
+    } else {
+        query = 'INSERT INTO comentarios (usuario_id, nombre, modelo, estrellas, texto, fecha, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
+        params = [userId, nombre, modelo, estrellas, texto, fecha, avatar];
+    }
+
+    db.query(query, params, (err, result) => {
+        if (err) return res.status(500).json({ error: 'Error creando comentario.' });
+        res.status(201).json({ id: result.insertId, message: '¡Mensaje enviado!' });
     });
 });
 
