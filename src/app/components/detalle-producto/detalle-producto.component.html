@@ -28,7 +28,7 @@
         </div>
 
         <!-- Call to Action Gigante -->
-        <button class="btn-add-giant" (click)="carritoService.agregarItem(productoActual()!)">
+        <button class="btn-add-giant" (click)="carritoService.agregarAlCarrito(productoActual()!)">
           🛍️ Añadir al Carrito
         </button>
       </div>
@@ -62,7 +62,7 @@
                     <h4>{{ item.nombre }}</h4>
                     <p class="cart-item-price">${{ item.precio | number:'1.2-2' }} x {{ item.cantidad }}</p>
                   </div>
-                  <button class="btn-delete-item" (click)="carritoService.quitarItem(item.id)">🗑️</button>
+                  <button class="btn-delete-item" (click)="carritoService.quitarDelCarrito(item.id)">🗑️</button>
                 </div>
               }
             </div>
