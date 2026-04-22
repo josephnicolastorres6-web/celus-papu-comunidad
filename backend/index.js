@@ -311,6 +311,50 @@ app.get('/productos/:id', (req, res) => {
 });
 
 // ==========================================
+// MÓDULO DE PEDIDOS (CARRITO)
+// ==========================================
+app.post('/pedidos', verificarToken, (req, res) => {
+    const { total, items } = req.body;
+    
+    // 1. Insertar el encabezado en pedidos
+    db.query("INSERT INTO pedidos (total, estado) VALUES (?, 'pendiente')", [total], (err, result) => {
+        if (err) {
+            console.error('Error creando pedido maestra:', err);
+            return res.status(500).json({ error: 'Error al generar el bloque de pedido' });
+        }
+        
+        const id_pedido = result.insertId;
+        
+        // 2. Insertar los items en detalles_pedido iterativamente
+        if (items && items.length > 0) {
+            let completados = 0;
+            let huboError = false;
+            
+            items.forEach(item => {
+                db.query('INSERT INTO detalles_pedido (id_pedido, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)', 
+                [id_pedido, item.id, item.cantidad, item.precio], (errDetalle) => {
+                    if (errDetalle) {
+                        console.error('Error insertando detalle de factura:', errDetalle);
+                        huboError = true;
+                    }
+                    
+                    completados++;
+                    // 3. Evaluar respuesta tras el loop asíncrono
+                    if (completados === items.length) {
+                        if (huboError) {
+                            return res.status(500).json({ error: 'Pedido registrado, parcialmente defectuoso' });
+                        }
+                        return res.status(201).json({ id_pedido });
+                    }
+                });
+            });
+        } else {
+            return res.status(201).json({ id_pedido });
+        }
+    });
+});
+
+// ==========================================
 // Iniciar el servidor (Actualizado para el puerto dinámico de Railway)
 // ==========================================
 const PORT = process.env.PORT || 8080;

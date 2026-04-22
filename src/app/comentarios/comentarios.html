@@ -128,7 +128,7 @@
           <span>Total a pagar:</span>
           <span class="total-price">${{ carritoService.total() | number:'1.2-2' }}</span>
         </div>
-        <button class="btn-checkout neon-btn" (click)="carritoService.comprar()">
+        <button class="btn-checkout neon-btn" (click)="carritoService.finalizarCompra()">
           💳 Proceder al Pago
         </button>
       </div>
