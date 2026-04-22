@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormularioComponent } from './formulario'; 
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service'; 
+import { CarritoService } from '../services/carrito.service';
 import { RouterModule } from '@angular/router'; 
 import { environment } from '../../environments/environment';
 
@@ -33,6 +34,7 @@ export interface ProductoFeed {
 })
 export class ComentariosComponent implements OnInit {
   public authService = inject(AuthService);
+  public carritoService = inject(CarritoService);
   private http = inject(HttpClient);
   
   feedMuro = signal<ResenaFeed[]>([]);

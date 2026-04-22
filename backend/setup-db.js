@@ -14,13 +14,11 @@ async function setupDatabase() {
     console.log('🔌 Conectando al engranaje base de MySQL...');
     const db = await mysql.createConnection(connectionConfig);
 
-    console.log('🗑️  Limpiando arquitectura antigua para evitar choques estructurales...');
-    await db.execute('DROP TABLE IF EXISTS comentarios');
-    await db.execute('DROP TABLE IF EXISTS administradores');
-
+    console.log('🛡️  MODO PRODUCCIÓN: Conservando datos existentes (Sin DROP TABLES)...');
+    
     console.log('🏗️  Diseñando la tabla "administradores" [RF03: Preparación Avatar]...');
     await db.execute(`
-      CREATE TABLE administradores (
+      CREATE TABLE IF NOT EXISTS administradores (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
@@ -30,7 +28,7 @@ async function setupDatabase() {
 
     console.log('🏗️  Diseñando la tabla "comentarios" [RF04/RF06: Integridad Referencial y Cascade]...');
     await db.execute(`
-      CREATE TABLE comentarios (
+      CREATE TABLE IF NOT EXISTS comentarios (
         id INT AUTO_INCREMENT PRIMARY KEY,
         admin_id INT NOT NULL,
         nombre VARCHAR(255) NOT NULL,
@@ -44,9 +42,8 @@ async function setupDatabase() {
     `);
 
     console.log('📦  Diseñando tabla de "productos" [Catálogo de Alta Gama]...');
-    await db.execute('DROP TABLE IF EXISTS productos');
     await db.execute(`
-      CREATE TABLE productos (
+      CREATE TABLE IF NOT EXISTS productos (
         id INT AUTO_INCREMENT PRIMARY KEY,
         nombre VARCHAR(255) NOT NULL,
         marca VARCHAR(100),
