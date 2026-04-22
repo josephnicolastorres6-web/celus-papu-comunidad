@@ -10,21 +10,24 @@ const SECRET_KEY = process.env.JWT_SECRET || 'cocacola03';
 const app = express();
 
 // ==========================================
-// CONFIGURACIÓN DE CORS (CORREGIDO PARA VERCEL)
+// CONFIGURACIÓN DE CORS MANUAL (TÉCNICA DE FUERZA BRUTA)
 // ==========================================
-app.use(cors({
-  origin: 'https://celus-papu-comunidad.vercel.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
-
-// Manejo manual de preflight para evitar crash en Express v5
 app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+  try {
+    res.header('Access-Control-Allow-Origin', 'https://celus-papu-comunidad.vercel.app');
+    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  } catch (error) {
+    console.error('Fallo en middleware CORS:', error);
+    res.status(500).json({ error: 'Error crítico de seguridad en la comunicación' });
   }
-  next();
 });
 
 app.use(express.json());
