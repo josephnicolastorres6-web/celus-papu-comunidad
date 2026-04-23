@@ -57,12 +57,8 @@ export class ComentariosComponent implements OnInit {
   showAdminModal = signal<boolean>(false);
   showNuevoMensajeModal = signal<boolean>(false);
 
-  // Data temporal para formularios
-  perfilForm = { nombre: '', avatar: '' };
-  adminForm = { username: '', password: '', avatar: 'assets/avatars/avatar1.svg' };
-  mensajeForm = { texto: '', modelo: '', estrellas: 5 };
-
-  avatares = [
+  // Listas de Avatares (Públicas para la plantilla)
+  public avatares = [
     '/avatar1.png',
     '/avatar2.png',
     '/avatar3.png',
@@ -71,13 +67,23 @@ export class ComentariosComponent implements OnInit {
     '/moai-xiaomi.png'
   ];
 
-  avataresAdmin = [
+  public avataresAdmin = [
     '/avatar1.png',
     '/avatar2.png',
     '/avatar3.png',
     '/logo1.jpg',
     '/moai-poco.png'
   ];
+
+  // Getters de Ayuda para la Plantilla (Resuelven "rojos" de Binding)
+  get esAdmin() { return this.authService.isAdmin(); }
+  get esCliente() { return this.authService.estaLogueadoCliente(); }
+  get estaLogueado() { return this.esAdmin || this.esCliente(); }
+
+  // Data temporal para formularios (Pública para ngModel)
+  public perfilForm = { nombre: '', avatar: '' };
+  public adminForm = { username: '', password: '', avatar: 'assets/avatars/avatar1.svg' };
+  public mensajeForm = { texto: '', modelo: '', estrellas: 5 };
 
   ngOnInit() {
     this.cargarMuro();
