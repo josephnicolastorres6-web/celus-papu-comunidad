@@ -201,7 +201,7 @@ app.post('/api/admin/login', (req, res) => {
         res.json({ 
             message: 'Inicio de sesión exitoso', 
             token: token,
-            role: admin.rol || 'usuario' 
+            role: 'admin' 
         });
     });
 });
@@ -320,7 +320,7 @@ app.get('/usuarios', verificarToken, (req, res) => {
             id: u.id,
             nombre: u.username,
             avatar: u.avatar || '/avatar2.png',
-            rol: 'Usuario',
+            rol: 'Administrador',
             fecha: new Date().toISOString().split('T')[0]
         }));
         
@@ -448,7 +448,7 @@ app.put('/api/usuario/perfil', verificarToken, (req, res) => {
 
 app.get('/api/miembros', (req, res) => {
     const query = `
-        SELECT id, nombre as username, avatar, ultima_conexion, 'cliente' as rol FROM usuarios
+        SELECT id, username, avatar, ultima_conexion, 'cliente' as rol FROM usuarios
         UNION
         SELECT id, username, avatar, NULL as ultima_conexion, 'admin' as rol FROM administradores
         ORDER BY ultima_conexion DESC
@@ -491,7 +491,7 @@ app.get('/comentarios', verificarToken, (req, res) => {
 
     let query = `
       SELECT c.id, c.texto, c.fecha, c.estrellas, 
-             COALESCE(a.username, u.nombre) as username, 
+             COALESCE(a.username, u.username) as username, 
              COALESCE(a.avatar, u.avatar) as avatar,
              c.modelo, c.usuario_id
       FROM comentarios c 

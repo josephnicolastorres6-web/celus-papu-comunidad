@@ -57,8 +57,11 @@ export class AuthService {
     const token = this.getToken();
     if (!token) return false;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.username === 'admin';
+      // Decodificamos el payload del JWT (base64)
+      const payloadString = atob(token.split('.')[1]);
+      const payload = JSON.parse(payloadString);
+      // 👇 REPARACIÓN: Ahora verificamos el ROL, no solo el nombre 'admin'
+      return payload.role === 'admin';
     } catch (e) {
       return false;
     }
