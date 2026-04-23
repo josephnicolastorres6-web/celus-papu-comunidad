@@ -75,8 +75,8 @@ export class AuthService {
   }
 
   // --- MÓDULO DE CLIENTES & SOCIAL ---
-  loginCliente(email: string, pass: string) {
-    return this.http.post<any>(`${this.apiUrl}/api/usuarios/login`, { email, password: pass })
+  loginCliente(nombre: string, pass: string) {
+    return this.http.post<any>(`${this.apiUrl}/api/usuarios/login`, { nombre, password: pass })
       .pipe(
         tap(res => {
           if (res.token) {
@@ -89,6 +89,8 @@ export class AuthService {
   }
 
   registroCliente(datos: any) {
+    // Generamos un email ficticio para cumplir con la DB si fuera necesario, 
+    // pero el backend ahora lo manejará como opcional.
     return this.http.post<any>(`${this.apiUrl}/api/usuarios/registro`, datos);
   }
 

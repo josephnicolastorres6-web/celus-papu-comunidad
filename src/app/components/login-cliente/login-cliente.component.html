@@ -8,8 +8,8 @@
 
     <form (submit)="login(); $event.preventDefault()" class="form-grid">
       <div class="input-group">
-        <label>Correo Electrónico</label>
-        <input type="email" [(ngModel)]="email" name="email" placeholder="tu@email.com" required>
+        <label>Nombre de Usuario</label>
+        <input type="text" [(ngModel)]="usuario" name="usuario" placeholder="Tu nombre" required>
       </div>
 
       <div class="input-group">

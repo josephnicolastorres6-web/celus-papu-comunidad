@@ -144,21 +144,22 @@ app.post('/login', (req, res) => {
 // MÓDULO DE CLIENTES (REGISTRO Y LOGIN)
 // ==========================================
 app.post('/api/usuarios/registro', async (req, res) => {
-    const { nombre, email, password, direccion, ciudad, avatar } = req.body;
+    const { nombre, password, avatar } = req.body;
     
-    if (!nombre || !email || !password) {
-        return res.status(400).json({ error: 'Nombre, correo y contraseña son obligatorios.' });
+    if (!nombre || !password) {
+        return res.status(400).json({ error: 'Nombre y contraseña son obligatorios.' });
     }
 
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const avatarDefault = avatar || '/avatar1.png';
+        const emailDummy = `${nombre.toLowerCase().replace(/\s/g, '')}@celuspapu.com`;
 
-        const query = 'INSERT INTO usuarios (nombre, email, password, direccion, ciudad, avatar) VALUES (?, ?, ?, ?, ?, ?)';
-        db.query(query, [nombre, email, hashedPassword, direccion, ciudad, avatarDefault], (err, result) => {
+        const query = 'INSERT INTO usuarios (nombre, email, password, avatar) VALUES (?, ?, ?, ?)';
+        db.query(query, [nombre, emailDummy, hashedPassword, avatarDefault], (err, result) => {
             if (err) {
-                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Este correo electrónico ya está registrado.' });
+                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Este nombre de usuario ya está en uso. Elige otro.' });
                 return res.status(500).json({ error: 'Error al registrar el cliente en la base de datos.' });
             }
             res.status(201).json({ message: 'Registro de cliente exitoso.', id: result.insertId });
@@ -170,16 +171,16 @@ app.post('/api/usuarios/registro', async (req, res) => {
 });
 
 app.post('/api/usuarios/login', (req, res) => {
-    const { email, password } = req.body;
-    const query = 'SELECT * FROM usuarios WHERE email = ?';
+    const { nombre, password } = req.body;
+    const query = 'SELECT * FROM usuarios WHERE nombre = ?';
 
-    db.query(query, [email], async (err, results) => {
+    db.query(query, [nombre], async (err, results) => {
         if (err) return res.status(500).json({ error: 'Error en la base de datos al buscar usuario.' });
-        if (results.length === 0) return res.status(401).json({ error: 'Credenciales de acceso inválidas.' });
+        if (results.length === 0) return res.status(401).json({ error: 'El nombre de usuario no existe.' });
 
         const usuario = results[0];
         const valida = await bcrypt.compare(password, usuario.password);
-        if (!valida) return res.status(401).json({ error: 'Credenciales de acceso inválidas.' });
+        if (!valida) return res.status(401).json({ error: 'Contraseña de cliente incorrecta.' });
 
         const token = jwt.sign(
             { id: usuario.id, nombre: usuario.nombre, email: usuario.email, avatar: usuario.avatar, role: 'cliente' },

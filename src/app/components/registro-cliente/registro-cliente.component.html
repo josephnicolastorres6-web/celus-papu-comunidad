@@ -20,31 +20,14 @@
         </div>
       </div>
 
-      <div class="input-row">
-        <div class="input-group">
-          <label>Nombre Completo *</label>
-          <input type="text" [(ngModel)]="nombre" name="nombre" placeholder="Juan Pérez" required>
-        </div>
-        <div class="input-group">
-          <label>Email *</label>
-          <input type="email" [(ngModel)]="email" name="email" placeholder="tu@email.com" required>
-        </div>
+      <div class="input-group">
+        <label>Nombre Completo / Usuario *</label>
+        <input type="text" [(ngModel)]="nombre" name="nombre" placeholder="Tu apodo VIP" required>
       </div>
 
       <div class="input-group">
         <label>Contraseña *</label>
         <input type="password" [(ngModel)]="password" name="password" placeholder="Mínimo 6 caracteres" required>
-      </div>
-
-      <div class="input-row">
-        <div class="input-group">
-          <label>Dirección</label>
-          <input type="text" [(ngModel)]="direccion" name="direccion" placeholder="Calle Falsa 123">
-        </div>
-        <div class="input-group">
-          <label>Ciudad</label>
-          <input type="text" [(ngModel)]="ciudad" name="ciudad" placeholder="Cali">
-        </div>
       </div>
 
       <button type="submit" class="btn-neon-green" [disabled]="cargando()">
@@ -53,7 +36,7 @@
       </button>
 
       <div class="footer-links">
-        <p>¿Ya tienes cuenta? <a routerLink="/login" class="neon-link">Inicia sesión</a></p>
+        <p>¿Ya tienes cuenta? <a routerLink="/login-cliente" class="neon-link">Inicia sesión</a></p>
       </div>
     </form>
   </div>

@@ -17,21 +17,19 @@ export class RegistroClienteComponent {
   private toastService = inject(ToastService);
   private router = inject(Router);
 
-  nombre = signal('');
-  email = signal('');
-  password = signal('');
-  direccion = signal('');
-  ciudad = signal('');
-  avatarSeleccionado = signal('assets/avatars/ninja.svg');
+  // Variables normales para binding (reemplazando signals en el form)
+  nombre = '';
+  password = '';
+  avatarSeleccionado = signal('/avatar1.png');
   cargando = signal(false);
 
   avatares = [
-    'assets/avatars/avatar1.svg',
-    'assets/avatars/avatar2.svg',
-    'assets/avatars/avatar3.svg',
-    'assets/avatars/avatar4.svg',
-    'assets/avatars/avatar5.svg',
-    'assets/avatars/ninja.svg'
+    '/avatar1.png',
+    '/avatar2.png',
+    '/avatar3.png',
+    '/moai-iphone.png',
+    '/moai-samsung.png',
+    '/moai-xiaomi.png'
   ];
 
   seleccionarAvatar(url: string) {
@@ -39,25 +37,22 @@ export class RegistroClienteComponent {
   }
 
   registrar() {
-    if (!this.nombre() || !this.email() || !this.password()) {
-      this.toastService.mostrar('Nombre, Email y Password son requeridos.', 'error');
+    if (!this.nombre || !this.password) {
+      this.toastService.mostrar('Nombre y Password son requeridos.', 'error');
       return;
     }
 
     const payload = {
-      nombre: this.nombre(),
-      email: this.email(),
-      password: this.password(),
-      direccion: this.direccion(),
-      ciudad: this.ciudad(),
+      nombre: this.nombre,
+      password: this.password,
       avatar: this.avatarSeleccionado()
     };
 
     this.cargando.set(true);
     this.authService.registroCliente(payload).subscribe({
       next: (res) => {
-        this.toastService.mostrar('¡RegistroPapu exitoso! Ahora inicia sesión.', 'success');
-        this.router.navigate(['/login']);
+        this.toastService.mostrar('¡Registro exitoso! Ahora inicia sesión.', 'success');
+        this.router.navigate(['/login-cliente']);
       },
       error: (err) => {
         this.cargando.set(false);
