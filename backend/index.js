@@ -14,7 +14,13 @@ const app = express();
 // ==========================================
 app.use((req, res, next) => {
   try {
-    res.header('Access-Control-Allow-Origin', 'https://celus-papu-comunidad.vercel.app');
+    const origin = req.headers.origin;
+    const allowedOrigins = ['https://celus-papu-comunidad.vercel.app', 'http://localhost:4200'];
+    
+    if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
+    }
+    
     res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
     res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
@@ -172,6 +178,7 @@ app.post('/api/usuarios/registro', async (req, res) => {
 
 app.post('/api/usuarios/login', (req, res) => {
     const { nombre, password } = req.body;
+    console.log(`🔑 Intento de login para usuario: ${nombre}`);
     const query = 'SELECT * FROM usuarios WHERE nombre = ?';
 
     db.query(query, [nombre], async (err, results) => {
