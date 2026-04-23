@@ -146,8 +146,21 @@ async function inicializarInfraestructura() {
         try {
             await pdb.query('ALTER TABLE usuarios ADD UNIQUE INDEX idx_username (username)');
             console.log('✅ Índice único agregado a username en usuarios.');
-        } catch (e) {
-            // Ignorar si el índice ya existe
+        } catch (e) {}
+
+        // PARCHE CRÍTICO: Asegurar AUTO_INCREMENT en IDs (TiDB Fix)
+        const parchesAutoIncrement = [
+            'ALTER TABLE usuarios MODIFY COLUMN id INT AUTO_INCREMENT',
+            'ALTER TABLE administradores MODIFY COLUMN id INT AUTO_INCREMENT',
+            'ALTER TABLE comentarios MODIFY COLUMN id INT AUTO_INCREMENT'
+        ];
+        for (const patch of parchesAutoIncrement) {
+            try { 
+                await pdb.query(patch); 
+                console.log(`✅ AUTO_INCREMENT verificado/aplicado: ${patch}`);
+            } catch (e) {
+                console.warn(`⚠️ No se pudo aplicar AUTO_INCREMENT (posiblemente ya activo): ${e.message}`);
+            }
         }
 
         const parchesComentarios = [
