@@ -20,13 +20,12 @@ const app = express();
 // 🚀 CONFIGURACIÓN DE CORS (PERMISOS VERCEL)
 // ==========================================
 app.use(cors({
-  origin: ['https://celus-papu-comunidad.vercel.app', 'http://localhost:4200'],
+  origin: 'https://celus-papu-comunidad.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
-// Responder a peticiones Preflight de forma global
 app.options('*', cors());
 
 app.use(express.json());
@@ -37,19 +36,8 @@ app.get('/', (req, res) => {
     res.status(200).send(`🚀 API Celus Papu Activa | Estado: ${dbStatus}`);
 });
 
-// ==========================================
-// 🚀 ARRANQUE INMEDIATO (ELIMINA ERROR 502)
-// ==========================================
-const PORT = process.env.PORT || 3000;
-console.log(`📡 Intentando abrir el puerto: ${PORT}`);
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ SERVIDOR VIVO EN PUERTO ${PORT}`);
-    // Intentar conectar a la BD SOLO DESPUÉS de abrir el puerto
-    setTimeout(() => conectarDB(), 1000); 
-}).on('error', (err) => {
-    console.error('🔥 Error crítico al intentar usar el puerto:', err);
-});
+// Intentar conectar a la BD de forma asíncrona al iniciar
+conectarDB();
 
 // ==========================================
 // 🚀 PROTOCOLO DE CONEXIÓN DIFERIDA (ANTI-REBOOT)
@@ -589,7 +577,13 @@ app.patch('/pedidos/:id/estado', verificarToken, (req, res) => {
     });
 });
 
-// Fin del archivo - El arranque se movió a la parte superior para eliminar el 502.
-
-// El servidor ya arrancó arriba
-// Eliminamos el bloque duplicado de logs que movimos al principio
+// ==========================================
+// 🚀 INICIO DEL SERVIDOR (AL FINAL)
+// ==========================================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ SERVIDOR VIVO Y ESCUCHANDO EN PUERTO ${PORT}`);
+    console.log(`📡 URL API: https://celus-papu-comunidad-production.up.railway.app`);
+}).on('error', (err) => {
+    console.error('🔥 Error crítico al iniciar el servidor:', err);
+});
