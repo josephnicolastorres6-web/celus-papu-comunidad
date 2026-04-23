@@ -205,6 +205,7 @@ app.post('/api/admin/login', (req, res) => {
 // ==========================================
 app.post('/api/usuarios/registro', async (req, res) => {
     const { username, password, avatar } = req.body;
+    console.log(`📝 Intento de registro: username="${username}"`);
     
     if (!username || !password) {
         return res.status(400).json({ error: 'Username y contraseña son obligatorios.' });
@@ -219,14 +220,26 @@ app.post('/api/usuarios/registro', async (req, res) => {
         const query = 'INSERT INTO usuarios (username, email, password, avatar) VALUES (?, ?, ?, ?)';
         db.query(query, [username, emailDummy, hashedPassword, avatarDefault], (err, result) => {
             if (err) {
-                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Este nombre de usuario ya está en uso.' });
-                return res.status(500).json({ error: 'Error al registrar el cliente.' });
+                console.error('🔥 ERROR CRÍTICO EN /api/usuarios/registro:', {
+                    code: err.code,
+                    sqlMessage: err.sqlMessage,
+                    sql: err.sql,
+                    mensaje: err.message
+                });
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).json({ error: 'Este nombre de usuario ya está en uso.' });
+                }
+                return res.status(500).json({ 
+                    error: 'Error al registrar el cliente.', 
+                    detalle: err.sqlMessage || err.message 
+                });
             }
+            console.log(`✅ Usuario registrado: ${username} (id=${result.insertId})`);
             res.status(201).json({ message: 'Registro de cliente exitoso.', id: result.insertId });
         });
     } catch (e) {
-        console.error('Error en registro cliente:', e);
-        res.status(500).json({ error: 'Error interno del servidor al procesar el registro.' });
+        console.error('🔥 ERROR CRÍTICO EN /api/usuarios/registro (catch):', e);
+        res.status(500).json({ error: 'Error interno del servidor.', detalle: e.message });
     }
 });
 
