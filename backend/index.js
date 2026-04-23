@@ -124,8 +124,24 @@ async function inicializarInfraestructura() {
             )
         `);
 
-        // Parches por si la tabla comentarios ya existía sin columnas
-        for (const col of ['admin_id INT NULL', 'usuario_id INT NULL', 'avatar VARCHAR(255)', 'modelo VARCHAR(255)']) {
+        // Parches por si las tablas ya existían sin columnas clave (casos de migración)
+        const parchesUsuarios = [
+            'username VARCHAR(255) NOT NULL UNIQUE',
+            'email VARCHAR(255) NOT NULL',
+            'password VARCHAR(255) NOT NULL',
+            'avatar VARCHAR(255) DEFAULT "/avatar1.png"'
+        ];
+        for (const col of parchesUsuarios) {
+            try { await pdb.query(`ALTER TABLE usuarios ADD COLUMN ${col}`); } catch (e) {}
+        }
+
+        const parchesComentarios = [
+            'admin_id INT NULL', 
+            'usuario_id INT NULL', 
+            'avatar VARCHAR(255)', 
+            'modelo VARCHAR(255)'
+        ];
+        for (const col of parchesComentarios) {
             try { await pdb.query(`ALTER TABLE comentarios ADD COLUMN ${col}`); } catch (e) {}
         }
 
