@@ -32,7 +32,24 @@ app.options('*', cors());
 app.use(express.json());
 
 // RUTA DE HEALTH CHECK (Prueba de vida para Railway)
-app.get('/', (req, res) => res.status(200).send('🚀 API Celus Papu Activa y Escuchando'));
+app.get('/', (req, res) => {
+    const dbStatus = db ? '🔌 DB Configurada' : '⚠️ DB Pendiente';
+    res.status(200).send(`🚀 API Celus Papu Activa | Estado: ${dbStatus}`);
+});
+
+// ==========================================
+// 🚀 ARRANQUE INMEDIATO (ELIMINA ERROR 502)
+// ==========================================
+const PORT = process.env.PORT || 3000;
+console.log(`📡 Intentando abrir el puerto: ${PORT}`);
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ SERVIDOR VIVO EN PUERTO ${PORT}`);
+    // Intentar conectar a la BD SOLO DESPUÉS de abrir el puerto
+    setTimeout(() => conectarDB(), 1000); 
+}).on('error', (err) => {
+    console.error('🔥 Error crítico al intentar usar el puerto:', err);
+});
 
 // ==========================================
 // 🚀 PROTOCOLO DE CONEXIÓN DIFERIDA (ANTI-REBOOT)
@@ -572,19 +589,7 @@ app.patch('/pedidos/:id/estado', verificarToken, (req, res) => {
     });
 });
 
-// ==========================================
-// Iniciar el servidor
-// ==========================================
-const PORT = process.env.PORT || 3000;
-const HOST = '0.0.0.0';
-
-app.listen(PORT, HOST, () => {
-    console.log(`🚀 SERVIDOR VIVO Y ESCUCHANDO EN PUERTO ${PORT}`);
-    console.log('⚡ Arranque inmediato completado. Iniciando conexión DB en segundo plano...');
-    conectarDB();
-}).on('error', (err) => {
-    console.error('🔥 Error crítico al intentar usar el puerto:', err);
-});
+// Fin del archivo - El arranque se movió a la parte superior para eliminar el 502.
 
 // El servidor ya arrancó arriba
 // Eliminamos el bloque duplicado de logs que movimos al principio
