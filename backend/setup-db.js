@@ -3,17 +3,25 @@ const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 async function setupDatabase() {
+  // Conectamos SIN especificar base de datos para poder crearla si no existe
   const connectionConfig = {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'celuspapu_db',
     port: process.env.DB_PORT || 3306
   };
 
+  const DB_NAME = process.env.DB_NAME || 'celuspapu';
+
   try {
-    console.log('🔌 Conectando al engranaje base de MySQL...');
+    console.log('🔌 Conectando al engranaje base de MySQL/TiDB...');
     const db = await mysql.createConnection(connectionConfig);
+
+    // Forzar la creación de la base de datos si no existe
+    console.log(`🏗️  Creando base de datos '${DB_NAME}' si no existe...`);
+    await db.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;`);
+    await db.query(`USE \`${DB_NAME}\`;`);
+    console.log(`✅ Usando la base de datos: ${DB_NAME}`);
 
     console.log('🏗️  Diseñando la tabla "administradores" [Admin0 Supremo]...');
     // RNF05: Bypass temporal de integrity checks para migración estructural

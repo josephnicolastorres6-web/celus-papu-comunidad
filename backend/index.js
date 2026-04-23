@@ -27,9 +27,6 @@ app.use(cors({
   credentials: true
 }));
 
-// Preflight global seguro
-app.options('*', cors());
-
 // 2. PARSEO DE JSON
 app.use(express.json());
 
@@ -59,13 +56,16 @@ async function inicializarInfraestructura() {
     try {
         const promiseDb = db.promise();
         
-        // 1. Tabla Administradores
+        // 1. Reconstrucción Forzada de Tabla Administradores (bypass FK para TiDB)
+        await promiseDb.query('SET FOREIGN_KEY_CHECKS = 0');
+        await promiseDb.query('DROP TABLE IF EXISTS administradores');
+        await promiseDb.query('SET FOREIGN_KEY_CHECKS = 1');
         await promiseDb.query(`
             CREATE TABLE IF NOT EXISTS administradores (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
-                avatar VARCHAR(255) DEFAULT '/avatar1.png',
+                avatar VARCHAR(255) DEFAULT '/logo1.jpg',
                 es_supremo BOOLEAN DEFAULT FALSE,
                 rol VARCHAR(50) DEFAULT 'admin'
             )
