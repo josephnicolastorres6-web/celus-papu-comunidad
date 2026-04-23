@@ -100,7 +100,26 @@ async function inicializarInfraestructura() {
             )
         `);
 
-        // 4. Inyección del Admin Supremo garantizada
+        // 4. PARCHE DE MIGRACIÓN: Añadir columnas faltantes si la tabla ya existía sin ellas
+        const columnPatches = [
+            'ALTER TABLE comentarios ADD COLUMN admin_id INT NULL',
+            'ALTER TABLE comentarios ADD COLUMN usuario_id INT NULL',
+            'ALTER TABLE comentarios ADD COLUMN avatar VARCHAR(255)',
+            'ALTER TABLE comentarios ADD COLUMN modelo VARCHAR(255)'
+        ];
+        for (const patch of columnPatches) {
+            try {
+                await promiseDb.query(patch);
+                console.log(`✅ Parche aplicado: ${patch}`);
+            } catch (patchErr) {
+                // Columna ya existe (ER_DUP_FIELDNAME) → ignorar silenciosamente
+                if (patchErr.code !== 'ER_DUP_FIELDNAME') {
+                    console.warn(`⚠️ Parche omitido: ${patchErr.message}`);
+                }
+            }
+        }
+
+        // 5. Inyección del Admin Supremo garantizada
         const hash = await bcrypt.hash('admin000', 10);
         await promiseDb.query(`
             INSERT IGNORE INTO administradores (username, password, avatar, es_supremo) 
