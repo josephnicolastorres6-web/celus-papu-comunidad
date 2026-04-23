@@ -35,60 +35,54 @@ app.use(express.json());
 app.get('/', (req, res) => res.status(200).send('🚀 API Celus Papu Activa y Escuchando'));
 
 // ==========================================
-// Configuración de la conexión a MySQL (No Fatal)
+// 🚀 PROTOCOLO DE CONEXIÓN DIFERIDA (ANTI-REBOOT)
 // ==========================================
 let db;
-try {
-    db = mysql.createPool({
-        host: process.env.DB_HOST || 'localhost',
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_NAME || 'celuspapu_db',
-        port: process.env.DB_PORT || 3306,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0
-    });
+function conectarDB() {
+    console.log('🔌 Intentando establecer el engranaje con MySQL...');
+    try {
+        db = mysql.createPool({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'celuspapu_db',
+            port: process.env.DB_PORT || 3306,
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0
+        });
 
-    // Comprobamos la conexión del pool de forma asíncrona (No bloqueante)
-    db.getConnection((err, connection) => {
-        if (err) {
-            console.error('⚠️ Advertencia: No se pudo conectar al Pool de MySQL inicialmente:', err.message);
-        } else {
-            console.log('¡Conectado exitosamente al Pool de MySQL! 🗿🔌');
-            connection.release();
-        }
-    });
-} catch (poolError) {
-    console.error('🔥 Error crítico al configurar el Pool de MySQL:', poolError);
+        db.getConnection((err, connection) => {
+            if (err) {
+                console.error('⚠️ Advertencia: Conexión a DB fallida (servidor sigue vivo):', err.message);
+            } else {
+                console.log('¡Conectado exitosamente al Pool de MySQL! 🗿🔌');
+                connection.release();
+                inicializarAdmin(); // Siembra solo si hay conexión
+            }
+        });
+    } catch (poolError) {
+        console.error('🔥 Error fatal configurando Pool:', poolError);
+    }
 }
 
-// ==========================================
-// SIEMBRA AUTOMÁTICA (AUTO-SEEDING)
-// ==========================================
 const inicializarAdmin = () => {
-    if (!db) return console.warn('⚠️ Omitiendo siembra: Pool de DB no disponible.');
+    if (!db) return;
     const checkQuery = 'SELECT * FROM administradores WHERE username = "admin0"';
     db.query(checkQuery, async (err, results) => {
-        if (err) return console.error('Error verificando administradores:', err);
-
+        if (err) return;
         if (results.length === 0) {
             try {
                 const salt = await bcrypt.genSalt(10);
-                const hashedPassword = await bcrypt.hash('admin1234', salt);
-                const insertQuery = 'INSERT INTO administradores (username, password) VALUES (?, ?)';
-                db.query(insertQuery, ['admin0', hashedPassword], (err, result) => {
-                    if (!err) console.log('🛡️ Siembra Automática: Administrador inicial (admin0) creado exitosamente.');
+                const hashedPassword = await bcrypt.hash('admin000', salt);
+                const insertQuery = 'INSERT INTO administradores (username, password, es_supremo) VALUES (?, ?, ?)';
+                db.query(insertQuery, ['admin0', hashedPassword, true], (err) => {
+                    if (!err) console.log('🛡️ Siembra Automática: Admin0 creado.');
                 });
-            } catch (error) {
-                console.error('Error encriptando la contraseña:', error);
-            }
-        } else {
-            console.log('🛡️ El administrador principal (admin0) ya existe en la base de datos.');
+            } catch (e) {}
         }
     });
 };
-inicializarAdmin();
 
 // ==========================================
 // REGISTRO DE ADMINISTRADORES
@@ -582,8 +576,12 @@ app.patch('/pedidos/:id/estado', verificarToken, (req, res) => {
 // Iniciar el servidor
 // ==========================================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Servidor levantado con éxito en el puerto ${PORT}`);
+const HOST = '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
+    console.log(`🚀 SERVIDOR VIVO EN PUERTO ${PORT}`);
+    // Intentar conectar a la BD SOLO DESPUÉS de abrir el puerto
+    conectarDB();
 }).on('error', (err) => {
     console.error('🔥 Error crítico al intentar usar el puerto:', err);
 });
