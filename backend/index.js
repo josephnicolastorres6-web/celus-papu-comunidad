@@ -153,7 +153,7 @@ app.post('/api/usuarios/registro', async (req, res) => {
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const avatarDefault = avatar || 'assets/avatars/ninja.svg';
+        const avatarDefault = avatar || '/avatar1.png';
 
         const query = 'INSERT INTO usuarios (nombre, email, password, direccion, ciudad, avatar) VALUES (?, ?, ?, ?, ?, ?)';
         db.query(query, [nombre, email, hashedPassword, direccion, ciudad, avatarDefault], (err, result) => {
@@ -238,7 +238,7 @@ app.get('/usuarios', verificarToken, (req, res) => {
         const usuariosFormateados = results.map(u => ({
             id: u.id,
             nombre: u.username,
-            avatar: u.avatar || 'assets/avatars/avatar1.svg',
+            avatar: u.avatar || '/avatar2.png',
             rol: 'Usuario',
             fecha: new Date().toISOString().split('T')[0]
         }));
@@ -300,9 +300,9 @@ app.post('/admin/usuarios', verificarToken, async (req, res) => {
         const hashedPassword = await bcrypt.hash('papu123456', salt);
         const query = 'INSERT INTO usuarios (nombre, email, password, avatar) VALUES (?, ?, ?, ?)';
         
-        db.query(query, [nombre, email, hashedPassword, avatar || 'assets/avatars/ninja.svg'], (err, result) => {
+        db.query(query, [nombre, email, hashedPassword, avatar || '/avatar1.png'], (err, result) => {
             if (err) return res.status(500).json({ error: 'Error al crear el cliente de forma manual.' });
-            res.status(201).json({ id: result.insertId, nombre, email, avatar: avatar || 'assets/avatars/ninja.svg' });
+            res.status(201).json({ id: result.insertId, nombre, email, avatar: avatar || '/avatar1.png' });
         });
     } catch (e) {
         res.status(500).json({ error: 'Error interno al procesar el alta de cliente.' });
@@ -336,7 +336,7 @@ app.post('/api/admin/registrar', verificarToken, soloAdminSupremo, async (req, r
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const insertQuery = 'INSERT INTO administradores (username, password, avatar) VALUES (?, ?, ?)';
-        db.query(insertQuery, [username, hashedPassword, avatar || 'assets/avatars/avatar1.svg'], (err) => {
+        db.query(insertQuery, [username, hashedPassword, avatar || '/avatar2.png'], (err) => {
             if (err) return res.status(500).json({ error: 'Error al registrar el nuevo administrador.' });
             res.status(201).json({ message: 'Nuevo administrador registrado con éxito.' });
         });
@@ -388,7 +388,7 @@ app.post('/administradores', verificarToken, soloAdminSupremo, (req, res) => {
         try {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
-            const avatarInyectado = req.body.avatar || 'assets/avatars/avatar1.svg';
+            const avatarInyectado = req.body.avatar || '/avatar2.png';
             const insertQuery = 'INSERT INTO administradores (username, password, avatar) VALUES (?, ?, ?)';
             db.query(insertQuery, [username, hashedPassword, avatarInyectado], (err, result) => {
                 if (err) return res.status(500).json({ error: 'Error al crear el nuevo administrador.' });

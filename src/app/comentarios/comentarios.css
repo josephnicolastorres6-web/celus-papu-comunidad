@@ -1,16 +1,6 @@
 /* =========================================
    ESTÉTICA "DASHBOARD SOCIAL" CELUS PAPU
    ========================================= */
-
-:root {
-  --sidebar-bg: #1e1e1e;
-  --main-bg: #0f172a;
-  --neon-cyan: #00f3ff;
-  --neon-green: #10b981;
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --border-glass: rgba(255, 255, 255, 0.08);
-}
-
 .dashboard-wrapper {
   display: grid;
   grid-template-columns: 280px 1fr;

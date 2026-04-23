@@ -63,20 +63,20 @@ export class ComentariosComponent implements OnInit {
   mensajeForm = { texto: '', modelo: '', estrellas: 5 };
 
   avatares = [
-    'assets/avatars/ninja.svg',
-    'assets/avatars/cyborg.svg',
-    'assets/avatars/detective.svg',
-    'assets/avatars/gamer.svg',
-    'assets/avatars/pilot.svg',
-    'assets/avatars/samurai.svg'
+    '/avatar1.png',
+    '/avatar2.png',
+    '/avatar3.png',
+    '/moai-iphone.png',
+    '/moai-samsung.png',
+    '/moai-xiaomi.png'
   ];
 
   avataresAdmin = [
-    'assets/avatars/avatar1.svg',
-    'assets/avatars/avatar2.svg',
-    'assets/avatars/avatar3.svg',
-    'assets/avatars/avatar4.svg',
-    'assets/avatars/avatar5.svg'
+    '/avatar1.png',
+    '/avatar2.png',
+    '/avatar3.png',
+    '/logo1.jpg',
+    '/moai-poco.png'
   ];
 
   ngOnInit() {
