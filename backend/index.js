@@ -35,29 +35,32 @@ app.get('/', (req, res) => {
 // ==========================================
 // 🚀 PROTOCOLO AUTO-HEALING (TiDB Cloud)
 // ==========================================
+// El pool (db) se crea DENTRO de inicializarInfraestructura(), después de garantizar que la DB existe
 let db;
-db = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'celuspapu',
-    port: process.env.DB_PORT || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    ssl: process.env.DB_HOST?.includes('tidbcloud.com') ? { rejectUnauthorized: true } : false
-});
 
 async function inicializarInfraestructura() {
-    console.log('🏗️ Inicializando Auto-Healing de Infraestructura en TiDB Cloud...');
+    const DB_NAME = process.env.DB_NAME || 'celuspapu';
+    console.log(`\ud83c\udfd7\ufe0f Iniciando Auto-Healing para base de datos: ${DB_NAME}`);
+    
+    // PASO 1: Conexión temporal SIN especificar DB para poder crearla
+    const mysql2p = require('mysql2/promise');
+    const tempConn = await mysql2p.createConnection({
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        port: process.env.DB_PORT || 3306,
+        ssl: process.env.DB_HOST?.includes('tidbcloud.com') ? { rejectUnauthorized: true } : false
+    });
+
     try {
-        const promiseDb = db.promise();
-        
-        // 1. Reconstrucción Forzada de Tabla Administradores (bypass FK para TiDB)
-        await promiseDb.query('SET FOREIGN_KEY_CHECKS = 0');
-        await promiseDb.query('DROP TABLE IF EXISTS administradores');
-        await promiseDb.query('SET FOREIGN_KEY_CHECKS = 1');
-        await promiseDb.query(`
+        await tempConn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``);
+        await tempConn.query(`USE \`${DB_NAME}\``);
+        console.log(`\u2705 Base de datos '${DB_NAME}' lista.`);
+
+        // PASO 2: Crear/verificar tablas en la conexión temporal
+        await tempConn.query('SET FOREIGN_KEY_CHECKS = 0');
+        await tempConn.query('DROP TABLE IF EXISTS administradores');
+        await tempConn.query(`
             CREATE TABLE IF NOT EXISTS administradores (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
@@ -67,29 +70,28 @@ async function inicializarInfraestructura() {
                 rol VARCHAR(50) DEFAULT 'admin'
             )
         `);
+        await tempConn.query('SET FOREIGN_KEY_CHECKS = 1');
 
-        // 2. Tabla Usuarios (Clientes)
-        await promiseDb.query(`
+        await tempConn.query(`
             CREATE TABLE IF NOT EXISTS usuarios (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
                 email VARCHAR(255) NOT NULL,
                 password VARCHAR(255) NOT NULL,
                 avatar VARCHAR(255) DEFAULT '/avatar1.png',
+                nombre VARCHAR(255) NULL,
                 direccion VARCHAR(255),
                 ciudad VARCHAR(100),
-                ultima_conexion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                nombre VARCHAR(255) NULL
+                ultima_conexion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         `);
 
-        // 3. Tabla Comentarios
-        await promiseDb.query(`
+        await tempConn.query(`
             CREATE TABLE IF NOT EXISTS comentarios (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 admin_id INT NULL,
                 usuario_id INT NULL,
-                nombre VARCHAR(255) NOT NULL,
+                nombre VARCHAR(255) NOT NULL DEFAULT '',
                 modelo VARCHAR(255),
                 estrellas INT,
                 texto TEXT,
@@ -100,36 +102,43 @@ async function inicializarInfraestructura() {
             )
         `);
 
-        // 4. PARCHE DE MIGRACIÓN: Añadir columnas faltantes si la tabla ya existía sin ellas
-        const columnPatches = [
+        // PASO 3: Parches de columnas para tablas que ya existen sin ellas
+        const patches = [
             'ALTER TABLE comentarios ADD COLUMN admin_id INT NULL',
             'ALTER TABLE comentarios ADD COLUMN usuario_id INT NULL',
             'ALTER TABLE comentarios ADD COLUMN avatar VARCHAR(255)',
             'ALTER TABLE comentarios ADD COLUMN modelo VARCHAR(255)'
         ];
-        for (const patch of columnPatches) {
-            try {
-                await promiseDb.query(patch);
-                console.log(`✅ Parche aplicado: ${patch}`);
-            } catch (patchErr) {
-                // Columna ya existe (ER_DUP_FIELDNAME) → ignorar silenciosamente
-                if (patchErr.code !== 'ER_DUP_FIELDNAME') {
-                    console.warn(`⚠️ Parche omitido: ${patchErr.message}`);
-                }
-            }
+        for (const patch of patches) {
+            try { await tempConn.query(patch); }
+            catch (e) { /* columna ya existe, se ignora */ }
         }
 
-        // 5. Inyección del Admin Supremo garantizada
+        // PASO 4: Inyectar Admin0
         const hash = await bcrypt.hash('admin000', 10);
-        await promiseDb.query(`
-            INSERT IGNORE INTO administradores (username, password, avatar, es_supremo) 
-            VALUES ('admin0', ?, '/logo1.jpg', true)
-        `, [hash]);
+        await tempConn.query(
+            `INSERT IGNORE INTO administradores (username, password, avatar, es_supremo) VALUES ('admin0', ?, '/logo1.jpg', true)`,
+            [hash]
+        );
 
-        console.log('✅ Infraestructura Auto-Healed y Admin0 inyectado.');
-    } catch (e) {
-        console.error('🔥 Error en el Auto-Healing de Infraestructura:', e);
+        console.log('\u2705 Infraestructura lista. Admin0 garantizado.');
+    } finally {
+        await tempConn.end();
     }
+
+    // PASO 5: Ahora sí creamos el pool principal (la DB ya existe)
+    db = require('mysql2').createPool({
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: DB_NAME,
+        port: process.env.DB_PORT || 3306,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0,
+        ssl: process.env.DB_HOST?.includes('tidbcloud.com') ? { rejectUnauthorized: true } : false
+    });
+    console.log('\ud83d\udd0c Pool de conexiones principal listo.');
 }
 
 // ==========================================
