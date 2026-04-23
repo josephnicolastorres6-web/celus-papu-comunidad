@@ -18,19 +18,19 @@ export class LoginClienteComponent {
   private router = inject(Router);
 
   // Variables normales para ngModel (signals no son compatibles con binding bidireccional directo)
-  usuario = '';
+  username = '';
   password = '';
   cargando = signal(false);
 
   login() {
-    if (!this.usuario || !this.password) {
+    if (!this.username || !this.password) {
       this.toastService.mostrar('Por favor completa todos los campos.', 'error');
       return;
     }
 
     this.cargando.set(true);
     // Intentamos login con el nombre de usuario
-    this.authService.loginCliente(this.usuario, this.password).subscribe({
+    this.authService.loginCliente(this.username, this.password).subscribe({
       next: (res) => {
         this.toastService.mostrar(res.message, 'success');
         this.router.navigate(['/']);

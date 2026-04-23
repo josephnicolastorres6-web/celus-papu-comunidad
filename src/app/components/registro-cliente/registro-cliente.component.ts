@@ -18,7 +18,7 @@ export class RegistroClienteComponent {
   private router = inject(Router);
 
   // Variables normales para binding (reemplazando signals en el form)
-  nombre = '';
+  username = '';
   password = '';
   avatarSeleccionado = signal('/avatar1.png');
   cargando = signal(false);
@@ -37,13 +37,13 @@ export class RegistroClienteComponent {
   }
 
   registrar() {
-    if (!this.nombre || !this.password) {
+    if (!this.username || !this.password) {
       this.toastService.mostrar('Nombre y Password son requeridos.', 'error');
       return;
     }
 
     const payload = {
-      nombre: this.nombre,
+      username: this.username,
       password: this.password,
       avatar: this.avatarSeleccionado()
     };

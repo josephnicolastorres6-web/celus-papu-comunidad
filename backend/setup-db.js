@@ -30,10 +30,10 @@ async function setupDatabase() {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        nombre VARCHAR(255) NOT NULL,
-        email VARCHAR(255) NOT NULL UNIQUE,
+        username VARCHAR(255) NOT NULL UNIQUE,
+        email VARCHAR(255) NOT NULL,
         password VARCHAR(255) NOT NULL,
-        avatar VARCHAR(255) DEFAULT 'assets/avatars/ninja.svg',
+        avatar VARCHAR(255) DEFAULT '/avatar1.png',
         direccion VARCHAR(255),
         ciudad VARCHAR(100),
         ultima_conexion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

@@ -98,6 +98,16 @@ app.post('/registro', async (req, res) => {
         return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
     }
 
+// ==========================================
+// REGISTRO DE ADMINISTRADORES (Ruta protegida o abierta según plan)
+// ==========================================
+app.post('/api/admin/registrar', async (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username y contraseña son obligatorios' });
+    }
+
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -105,32 +115,33 @@ app.post('/registro', async (req, res) => {
         
         db.query(insertQuery, [username, hashedPassword], (err, result) => {
             if (err) {
-                console.error('❌ Error crítico en registro:', err);
-                return res.status(500).json({ error: 'Error al registrar el usuario en la base de datos' });
+                console.error('❌ Error crítico en registro admin:', err);
+                return res.status(500).json({ error: 'Error al registrar el administrador' });
             }
-            res.status(201).json({ message: '¡Usuario creado con éxito! 🚀' });
+            res.status(201).json({ message: '¡Administrador creado con éxito! 🚀' });
         });
     } catch (error) {
-        console.error('❌ Error al procesar registro:', error);
-        res.status(500).json({ error: 'Error interno al procesar el registro' });
+        console.error('❌ Error al procesar registro admin:', error);
+        res.status(500).json({ error: 'Error interno en el registro' });
     }
 });
 
 // ==========================================
-// ENDPOINT DE LOGIN (A.1) - ACTUALIZADO PARA ANGULAR
+// ENDPOINT DE LOGIN ADMIN (Independiente)
 // ==========================================
-app.post('/login', (req, res) => {
+app.post('/api/admin/login', (req, res) => {
     const { username, password } = req.body;
+    console.log(`🛡️ Intento de acceso administrativo para: ${username}`);
     const query = 'SELECT * FROM administradores WHERE username = ?';
     
     db.query(query, [username], async (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error en la base de datos' });
-        if (results.length === 0) return res.status(401).json({ error: 'El usuario no existe' });
+        if (err) return res.status(500).json({ error: 'Error en la base de datos de administración' });
+        if (results.length === 0) return res.status(401).json({ error: 'Acceso denegado: El administrador no existe' });
 
         const admin = results[0];
         const passwordValida = await bcrypt.compare(password, admin.password);
 
-        if (!passwordValida) return res.status(401).json({ error: 'Contraseña incorrecta' });
+        if (!passwordValida) return res.status(401).json({ error: 'Contraseña administrativa incorrecta' });
 
         const token = jwt.sign(
             { id: admin.id, username: admin.username, role: admin.rol || 'usuario' }, 
@@ -150,23 +161,23 @@ app.post('/login', (req, res) => {
 // MÓDULO DE CLIENTES (REGISTRO Y LOGIN)
 // ==========================================
 app.post('/api/usuarios/registro', async (req, res) => {
-    const { nombre, password, avatar } = req.body;
+    const { username, password, avatar } = req.body;
     
-    if (!nombre || !password) {
-        return res.status(400).json({ error: 'Nombre y contraseña son obligatorios.' });
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username y contraseña son obligatorios.' });
     }
 
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const avatarDefault = avatar || '/avatar1.png';
-        const emailDummy = `${nombre.toLowerCase().replace(/\s/g, '')}@celuspapu.com`;
+        const emailDummy = `${username.toLowerCase().replace(/\s/g, '')}@celuspapu.com`;
 
-        const query = 'INSERT INTO usuarios (nombre, email, password, avatar) VALUES (?, ?, ?, ?)';
-        db.query(query, [nombre, emailDummy, hashedPassword, avatarDefault], (err, result) => {
+        const query = 'INSERT INTO usuarios (username, email, password, avatar) VALUES (?, ?, ?, ?)';
+        db.query(query, [username, emailDummy, hashedPassword, avatarDefault], (err, result) => {
             if (err) {
-                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Este nombre de usuario ya está en uso. Elige otro.' });
-                return res.status(500).json({ error: 'Error al registrar el cliente en la base de datos.' });
+                if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Este nombre de usuario ya está en uso.' });
+                return res.status(500).json({ error: 'Error al registrar el cliente.' });
             }
             res.status(201).json({ message: 'Registro de cliente exitoso.', id: result.insertId });
         });
@@ -177,12 +188,12 @@ app.post('/api/usuarios/registro', async (req, res) => {
 });
 
 app.post('/api/usuarios/login', (req, res) => {
-    const { nombre, password } = req.body;
-    console.log(`🔑 Intento de login para usuario: ${nombre}`);
-    const query = 'SELECT * FROM usuarios WHERE nombre = ?';
+    const { username, password } = req.body;
+    console.log(`🔑 Intento de login para usuario: ${username}`);
+    const query = 'SELECT * FROM usuarios WHERE username = ?';
 
-    db.query(query, [nombre], async (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error en la base de datos al buscar usuario.' });
+    db.query(query, [username], async (err, results) => {
+        if (err) return res.status(500).json({ error: 'Error en la base de datos de usuarios.' });
         if (results.length === 0) return res.status(401).json({ error: 'El nombre de usuario no existe.' });
 
         const usuario = results[0];
@@ -190,7 +201,7 @@ app.post('/api/usuarios/login', (req, res) => {
         if (!valida) return res.status(401).json({ error: 'Contraseña de cliente incorrecta.' });
 
         const token = jwt.sign(
-            { id: usuario.id, nombre: usuario.nombre, email: usuario.email, avatar: usuario.avatar, role: 'cliente' },
+            { id: usuario.id, username: usuario.username, email: usuario.email, avatar: usuario.avatar, role: 'cliente' },
             SECRET_KEY,
             { expiresIn: '24h' }
         );
@@ -200,7 +211,7 @@ app.post('/api/usuarios/login', (req, res) => {
         res.json({ 
             message: '¡Bienvenido a Celus Papu!', 
             token, 
-            nombre: usuario.nombre,
+            nombre: usuario.username,
             avatar: usuario.avatar
         });
     });

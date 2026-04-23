@@ -35,7 +35,7 @@ export class AuthService {
   }
 
   login(username: string, password: string) {
-    return this.http.post<any>(`${this.apiUrl}/login`, { username, password })
+    return this.http.post<any>(`${this.apiUrl}/api/admin/login`, { username, password })
       .pipe(
         tap(response => {
           if (response.token) {
@@ -46,7 +46,7 @@ export class AuthService {
   }
 
   registro(username: string, password: string) {
-    return this.http.post<any>(`${this.apiUrl}/registro`, { username, password });
+    return this.http.post<any>(`${this.apiUrl}/api/admin/registrar`, { username, password });
   }
 
   getToken() { 
@@ -71,12 +71,12 @@ export class AuthService {
   logout() { 
     localStorage.removeItem('token'); 
     this.router.navigate(['/login']);
-    console.log('🚪 Sesión cerrada exitosamente en Celus Papu');
+    console.log('🛡️ Sesión de administrador cerrada.');
   }
 
   // --- MÓDULO DE CLIENTES & SOCIAL ---
-  loginCliente(nombre: string, pass: string) {
-    return this.http.post<any>(`${this.apiUrl}/api/usuarios/login`, { nombre, password: pass })
+  loginCliente(username: string, pass: string) {
+    return this.http.post<any>(`${this.apiUrl}/api/usuarios/login`, { username, password: pass })
       .pipe(
         tap(res => {
           if (res.token) {
