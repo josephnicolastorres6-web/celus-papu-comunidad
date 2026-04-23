@@ -273,19 +273,19 @@ app.put('/usuarios/:id', verificarToken, async (req, res) => {
 app.delete('/usuarios/:id', verificarToken, (req, res) => {
     const { id } = req.params;
     
-    // Proteger admin0 de ser eliminado
-    const checkQuery = 'SELECT username FROM administradores WHERE id = ?';
+    // Proteger Admin Supremo de ser eliminado
+    const checkQuery = 'SELECT es_supremo FROM administradores WHERE id = ?';
     db.query(checkQuery, [id], (err, results) => {
-        if (err) return res.status(500).json({ error: 'Error al verificar el administrador' });
+        if (err) return res.status(500).json({ error: 'Error al verificar jerarquía.' });
         
-        if (results.length > 0 && results[0].username === 'admin0') {
-            return res.status(403).json({ error: 'Protección activa: No puedes eliminar al Administrador Principal (admin0).' });
+        if (results.length > 0 && results[0].es_supremo) {
+            return res.status(403).json({ error: '¡Acceso Denegado! No puedes eliminar al Administrador Supremo.' });
         }
         
         const deleteQuery = 'DELETE FROM administradores WHERE id = ?';
         db.query(deleteQuery, [id], (err, result) => {
-            if (err) return res.status(500).json({ error: 'Error al eliminar el administrador' });
-            res.json({ message: 'Administrador eliminado con éxito' });
+            if (err) return res.status(500).json({ error: 'Error al eliminar la cuenta.' });
+            res.json({ message: 'Cuenta administradores eliminada con éxito.' });
         });
     });
 });

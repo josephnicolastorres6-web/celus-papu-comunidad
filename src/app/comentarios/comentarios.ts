@@ -177,6 +177,16 @@ export class ComentariosComponent implements OnInit {
     }
   }
 
+  irALoginCliente() {
+    console.log('Botón de cliente activado');
+    this.router.navigate(['/login']);
+  }
+
+  irALoginAdmin() {
+    console.log('Botón de admin activado');
+    this.router.navigate(['/admin-login']);
+  }
+
   calcularTiempo(fechaStr: string | null): string {
     if (!fechaStr) return 'Offline';
     const ahora = new Date();

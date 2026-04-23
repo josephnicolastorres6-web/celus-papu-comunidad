@@ -51,8 +51,8 @@
 
         <!-- BOTONES INVITADO (NO LOGUEADO) -->
         <ng-container *ngIf="!authService.isAdmin() && !authService.estaLogueadoCliente()">
-          <button class="btn-action neon-cyan" routerLink="/login-cliente">Iniciar Sesión</button>
-          <button class="btn-action" routerLink="/login">Iniciar Sesión Admin</button>
+          <button class="btn-action neon-cyan" (click)="irALoginCliente()">Iniciar Sesión</button>
+          <button class="btn-action" (click)="irALoginAdmin()">Iniciar Sesión Admin</button>
         </ng-container>
 
         <!-- CERRAR SESIÓN -->

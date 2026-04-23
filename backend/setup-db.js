@@ -1,5 +1,6 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config(); // Asegurarse de leer .env u variables de sistema en Railway
+const bcrypt = require('bcrypt');
+require('dotenv').config();
 
 async function setupDatabase() {
   const connectionConfig = {
@@ -14,17 +15,25 @@ async function setupDatabase() {
     console.log('🔌 Conectando al engranaje base de MySQL...');
     const db = await mysql.createConnection(connectionConfig);
 
-    console.log('🛡️  MODO PRODUCCIÓN: Conservando datos existentes (Sin DROP TABLES)...');
-    
-    console.log('🏗️  Diseñando la tabla "administradores" [RF03: Preparación Avatar]...');
+    console.log('🏗️  Diseñando la tabla "administradores" [Admin0 Supremo]...');
     await db.execute(`
       CREATE TABLE IF NOT EXISTS administradores (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
-        avatar VARCHAR(255) DEFAULT 'assets/avatars/avatar1.svg'
+        avatar VARCHAR(255) DEFAULT '/avatar1.png',
+        es_supremo BOOLEAN DEFAULT FALSE
       )
     `);
+
+    // Inyectar Admin0
+    const [rows] = await db.execute('SELECT * FROM administradores WHERE username = "admin0"');
+    if (rows.length === 0) {
+      console.log('🛡️ Inyectando Administrador Supremo (admin0)...');
+      const hash = await bcrypt.hash('admin000', 10);
+      await db.execute('INSERT INTO administradores (username, password, avatar, es_supremo) VALUES (?, ?, ?, ?)', 
+        ['admin0', hash, '/logo1.jpg', true]);
+    }
 
     console.log('👥  Diseñando la tabla de "usuarios" (Clientes VIP)...');
     await db.execute(`
