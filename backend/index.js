@@ -132,7 +132,14 @@ async function inicializarInfraestructura() {
             'avatar VARCHAR(255) DEFAULT "/avatar1.png"'
         ];
         for (const col of parchesUsuarios) {
-            try { await pdb.query(`ALTER TABLE usuarios ADD COLUMN ${col}`); } catch (e) {}
+            try { 
+                await pdb.query(`ALTER TABLE usuarios ADD COLUMN ${col}`); 
+                console.log(`✅ Columna agregada a usuarios: ${col}`);
+            } catch (e) {
+                if (e.code !== 'ER_DUP_FIELDNAME') {
+                    console.error(`⚠️ Error al parchear tabla usuarios (${col}):`, e.sqlMessage || e.message);
+                }
+            }
         }
 
         const parchesComentarios = [
@@ -142,7 +149,14 @@ async function inicializarInfraestructura() {
             'modelo VARCHAR(255)'
         ];
         for (const col of parchesComentarios) {
-            try { await pdb.query(`ALTER TABLE comentarios ADD COLUMN ${col}`); } catch (e) {}
+            try { 
+                await pdb.query(`ALTER TABLE comentarios ADD COLUMN ${col}`); 
+                console.log(`✅ Columna agregada a comentarios: ${col}`);
+            } catch (e) {
+                if (e.code !== 'ER_DUP_FIELDNAME') {
+                    console.error(`⚠️ Error al parchear tabla comentarios (${col}):`, e.sqlMessage || e.message);
+                }
+            }
         }
 
         // Admin0 garantizado
