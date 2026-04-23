@@ -1,3 +1,10 @@
+// ==========================================
+// ESCUDO ANTI-CRASH GLOBAL (PRIMERA LÍNEA)
+// ==========================================
+process.on('uncaughtException', err => console.error('🔥 CRASH FATAL NO CAPTURADO:', err));
+process.on('unhandledRejection', err => console.error('🔥 PROMESA RECHAZADA:', err));
+
+require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const express = require('express');
@@ -42,33 +49,39 @@ app.use(express.json());
 app.get('/', (req, res) => res.status(200).send('🚀 API Celus Papu Activa y Escuchando'));
 
 // ==========================================
-// Configuración de la conexión a MySQL (Actualizado para la nube y local)
+// Configuración de la conexión a MySQL (No Fatal)
 // ==========================================
-const db = mysql.createPool({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'celuspapu_db',
-    port: process.env.DB_PORT || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+let db;
+try {
+    db = mysql.createPool({
+        host: process.env.DB_HOST || 'localhost',
+        user: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'celuspapu_db',
+        port: process.env.DB_PORT || 3306,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+    });
 
-// Comprobamos la conexión del pool
-db.getConnection((err, connection) => {
-    if (err) {
-        console.error('❌ Error crítico conectando al Pool de MySQL:', err);
-        return;
-    }
-    console.log('¡Conectado exitosamente al Pool de MySQL! 🗿🔌');
-    connection.release();
-});
+    // Comprobamos la conexión del pool de forma asíncrona (No bloqueante)
+    db.getConnection((err, connection) => {
+        if (err) {
+            console.error('⚠️ Advertencia: No se pudo conectar al Pool de MySQL inicialmente:', err.message);
+        } else {
+            console.log('¡Conectado exitosamente al Pool de MySQL! 🗿🔌');
+            connection.release();
+        }
+    });
+} catch (poolError) {
+    console.error('🔥 Error crítico al configurar el Pool de MySQL:', poolError);
+}
 
 // ==========================================
 // SIEMBRA AUTOMÁTICA (AUTO-SEEDING)
 // ==========================================
 const inicializarAdmin = () => {
+    if (!db) return console.warn('⚠️ Omitiendo siembra: Pool de DB no disponible.');
     const checkQuery = 'SELECT * FROM administradores WHERE username = "admin0"';
     db.query(checkQuery, async (err, results) => {
         if (err) return console.error('Error verificando administradores:', err);
@@ -589,13 +602,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.error('🔥 Error crítico al intentar usar el puerto:', err);
 });
 
-// ==========================================
-// LOGS DE SUPERVIVENCIA (ANTI-CRASH)
-// ==========================================
-process.on('uncaughtException', (err) => {
-    console.error('🔥 Error fatal no capturado:', err);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('🔥 Promesa rechazada no manejada:', reason);
-});
+// El servidor ya arrancó arriba
+// Eliminamos el bloque duplicado de logs que movimos al principio
