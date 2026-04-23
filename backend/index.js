@@ -10,7 +10,7 @@ const SECRET_KEY = process.env.JWT_SECRET || 'cocacola03';
 const app = express();
 
 // ==========================================
-// CONFIGURACIÓN DE CORS MANUAL (TÉCNICA DE FUERZA BRUTA)
+// 1. CONFIGURACIÓN DE CORS (PRIMERA PRIORIDAD ABSOLUTA)
 // ==========================================
 app.use((req, res, next) => {
   try {
@@ -582,4 +582,15 @@ app.patch('/pedidos/:id/estado', verificarToken, (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log('🚀 Servidor activo y escuchando en el puerto ' + PORT);
+});
+
+// ==========================================
+// LOGS DE SUPERVIVENCIA (ANTI-CRASH)
+// ==========================================
+process.on('uncaughtException', (err) => {
+    console.error('🔥 Error fatal no capturado:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('🔥 Promesa rechazada no manejada:', reason);
 });

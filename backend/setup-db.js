@@ -142,4 +142,10 @@ async function setupDatabase() {
   }
 }
 
-setupDatabase();
+// Ejecución del Script de Robustez
+try {
+  setupDatabase();
+} catch (e) {
+  console.error('⚠️ Error no controlado en la migración de DB:', e);
+  // No salimos con error para permitir que el servidor intente arrancar de todas formas
+}
