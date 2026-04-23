@@ -76,9 +76,9 @@ export class ComentariosComponent implements OnInit {
   ];
 
   // Getters de Ayuda para la Plantilla (Resuelven "rojos" de Binding)
-  get esAdmin() { return this.authService.isAdmin(); }
-  get esCliente() { return this.authService.estaLogueadoCliente(); }
-  get estaLogueado() { return this.esAdmin || this.esCliente(); }
+  public get esAdmin(): boolean { return this.authService.isAdmin(); }
+  public get esCliente(): boolean { return this.authService.estaLogueadoCliente(); }
+  public get estaLogueado(): boolean { return this.esAdmin || this.esCliente; }
 
   // Data temporal para formularios (Pública para ngModel)
   public perfilForm = { nombre: '', avatar: '' };

@@ -47,7 +47,7 @@
         }
 
         <!-- BOTONES CLIENTE -->
-        @if (esCliente()) {
+        @if (esCliente) {
           <button class="btn-action neon-cyan" routerLink="/productos">Productos</button>
           <button class="btn-action" (click)="showNuevoMensajeModal.set(true)">Mensajes</button>
           <button class="btn-action" (click)="showPerfilModal.set(true)">Mi Perfil</button>
@@ -71,7 +71,7 @@
       <section class="muro-feed">
         <div class="feed-header">
           <h1>{{ esAdmin ? 'Muro Global de Mensajes' : 'Mis Mensajes' }}</h1>
-          @if (esCliente()) {
+          @if (esCliente) {
             <button class="btn-plus" (click)="showNuevoMensajeModal.set(true)" title="Redactar nuevo mensaje" aria-label="Nuevo mensaje">+ Nuevo Mensaje</button>
           }
           @if (esAdmin) {
