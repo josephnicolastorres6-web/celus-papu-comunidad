@@ -16,8 +16,10 @@ async function setupDatabase() {
     const db = await mysql.createConnection(connectionConfig);
 
     console.log('🏗️  Diseñando la tabla "administradores" [Admin0 Supremo]...');
+    // Reconstrucción forzada para evitar errores de columnas faltantes en Railway
+    await db.execute('DROP TABLE IF EXISTS administradores');
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS administradores (
+      CREATE TABLE administradores (
         id INT AUTO_INCREMENT PRIMARY KEY,
         username VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
