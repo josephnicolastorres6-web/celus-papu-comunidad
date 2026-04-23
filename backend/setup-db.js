@@ -16,7 +16,8 @@ async function setupDatabase() {
     const db = await mysql.createConnection(connectionConfig);
 
     console.log('🏗️  Diseñando la tabla "administradores" [Admin0 Supremo]...');
-    // Reconstrucción forzada para evitar errores de columnas faltantes en Railway
+    // RNF05: Bypass temporal de integrity checks para migración estructural
+    await db.execute('SET FOREIGN_KEY_CHECKS = 0');
     await db.execute('DROP TABLE IF EXISTS administradores');
     await db.execute(`
       CREATE TABLE administradores (
@@ -27,6 +28,7 @@ async function setupDatabase() {
         es_supremo BOOLEAN DEFAULT FALSE
       )
     `);
+    await db.execute('SET FOREIGN_KEY_CHECKS = 1');
 
     // Inyectar Admin0
     const [rows] = await db.execute('SELECT * FROM administradores WHERE username = "admin0"');
