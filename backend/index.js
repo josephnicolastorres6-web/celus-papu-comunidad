@@ -89,17 +89,7 @@ const inicializarAdmin = () => {
 inicializarAdmin();
 
 // ==========================================
-// ENDPOINT DE REGISTRO
-// ==========================================
-app.post('/registro', async (req, res) => {
-    const { username, password } = req.body;
-
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Usuario y contraseña son requeridos' });
-    }
-
-// ==========================================
-// REGISTRO DE ADMINISTRADORES (Ruta protegida o abierta según plan)
+// REGISTRO DE ADMINISTRADORES
 // ==========================================
 app.post('/api/admin/registrar', async (req, res) => {
     const { username, password } = req.body;
