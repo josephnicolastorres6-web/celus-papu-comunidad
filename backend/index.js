@@ -17,15 +17,17 @@ const SECRET_KEY = process.env.JWT_SECRET || 'cocacola03';
 const app = express();
 
 // ==========================================
-// 🚀 OPCIÓN NUCLEAR: CONFIGURACIÓN DE CORS GLOBAL
+// 🚀 CONFIGURACIÓN DE CORS (PERMISOS VERCEL)
 // ==========================================
-// Colocado en la cima absoluta para interceptar peticiones de Vercel/Localhost
 app.use(cors({
-  origin: '*', 
+  origin: ['https://celus-papu-comunidad.vercel.app', 'http://localhost:4200'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   credentials: true
 }));
+
+// Responder a peticiones Preflight de forma global
+app.options('*', cors());
 
 app.use(express.json());
 
