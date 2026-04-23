@@ -40,54 +40,81 @@ app.get('/', (req, res) => {
 });
 
 // ==========================================
-// 🚀 PROTOCOLO DE CONEXIÓN DIFERIDA (ANTI-REBOOT)
+// 🚀 PROTOCOLO AUTO-HEALING (TiDB Cloud)
 // ==========================================
 let db;
-function conectarDB() {
-    console.log('🔌 Intentando establecer el engranaje con MySQL...');
-    try {
-        db = mysql.createPool({
-            host: process.env.DB_HOST || 'localhost',
-            user: process.env.DB_USER || 'root',
-            password: process.env.DB_PASSWORD || '',
-            database: process.env.DB_NAME || 'celuspapu_db',
-            port: process.env.DB_PORT || 3306,
-            waitForConnections: true,
-            connectionLimit: 10,
-            queueLimit: 0
-        });
+db = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'celuspapu_db',
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
-        db.getConnection((err, connection) => {
-            if (err) {
-                console.error('⚠️ Advertencia: Conexión a DB fallida (servidor sigue vivo):', err.message);
-            } else {
-                console.log('¡Conectado exitosamente al Pool de MySQL! 🗿🔌');
-                connection.release();
-                inicializarAdmin(); // Siembra solo si hay conexión
-            }
-        });
-    } catch (poolError) {
-        console.error('🔥 Error fatal configurando Pool:', poolError);
+async function inicializarInfraestructura() {
+    console.log('🏗️ Inicializando Auto-Healing de Infraestructura en TiDB Cloud...');
+    try {
+        const promiseDb = db.promise();
+        
+        // 1. Tabla Administradores
+        await promiseDb.query(`
+            CREATE TABLE IF NOT EXISTS administradores (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(255) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                avatar VARCHAR(255) DEFAULT '/avatar1.png',
+                es_supremo BOOLEAN DEFAULT FALSE,
+                rol VARCHAR(50) DEFAULT 'admin'
+            )
+        `);
+
+        // 2. Tabla Usuarios (Clientes)
+        await promiseDb.query(`
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(255) NOT NULL UNIQUE,
+                email VARCHAR(255) NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                avatar VARCHAR(255) DEFAULT '/avatar1.png',
+                direccion VARCHAR(255),
+                ciudad VARCHAR(100),
+                ultima_conexion TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                nombre VARCHAR(255) NULL
+            )
+        `);
+
+        // 3. Tabla Comentarios
+        await promiseDb.query(`
+            CREATE TABLE IF NOT EXISTS comentarios (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                admin_id INT NULL,
+                usuario_id INT NULL,
+                nombre VARCHAR(255) NOT NULL,
+                modelo VARCHAR(255),
+                estrellas INT,
+                texto TEXT,
+                fecha VARCHAR(50),
+                avatar VARCHAR(255),
+                FOREIGN KEY (admin_id) REFERENCES administradores(id) ON DELETE CASCADE,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            )
+        `);
+
+        // 4. Inyección del Admin Supremo garantizada
+        const hash = await bcrypt.hash('admin000', 10);
+        await promiseDb.query(`
+            INSERT IGNORE INTO administradores (username, password, avatar, es_supremo) 
+            VALUES ('admin0', ?, '/logo1.jpg', true)
+        `, [hash]);
+
+        console.log('✅ Infraestructura Auto-Healed y Admin0 inyectado.');
+    } catch (e) {
+        console.error('🔥 Error en el Auto-Healing de Infraestructura:', e);
     }
 }
-
-const inicializarAdmin = () => {
-    if (!db) return;
-    const checkQuery = 'SELECT * FROM administradores WHERE username = "admin0"';
-    db.query(checkQuery, async (err, results) => {
-        if (err) return;
-        if (results.length === 0) {
-            try {
-                const salt = await bcrypt.genSalt(10);
-                const hashedPassword = await bcrypt.hash('admin000', salt);
-                const insertQuery = 'INSERT INTO administradores (username, password, es_supremo) VALUES (?, ?, ?)';
-                db.query(insertQuery, ['admin0', hashedPassword, true], (err) => {
-                    if (!err) console.log('🛡️ Siembra Automática: Admin0 creado.');
-                });
-            } catch (e) {}
-        }
-    });
-};
 
 // ==========================================
 // REGISTRO DE ADMINISTRADORES
@@ -578,13 +605,13 @@ app.patch('/pedidos/:id/estado', verificarToken, (req, res) => {
 });
 
 // ==========================================
-// 5. APERTURA DE PUERTO A PRUEBA DE FALLOS
+// 5. APERTURA DE PUERTO A PRUEBA DE FALLOS Y AUTO-HEALING
 // ==========================================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Servidor escuchando en el puerto ${PORT}`);
-    // Intentar conectar a la BD SOLO DESPUÉS de abrir el puerto
-    conectarDB();
-}).on('error', (err) => {
-    console.error('🔥 Error crítico al iniciar el servidor:', err);
+inicializarInfraestructura().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`✅ Servidor escuchando en el puerto ${PORT}`);
+    }).on('error', (err) => {
+        console.error('🔥 Error crítico al iniciar el servidor:', err);
+    });
 });
