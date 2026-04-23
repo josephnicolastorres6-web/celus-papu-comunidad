@@ -1,96 +1,143 @@
-.login-box {
-  max-width: 350px;
-  margin: 80px auto;
-  padding: 30px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+  padding: 20px;
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 40px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.header {
   text-align: center;
-  font-family: sans-serif;
+  margin-bottom: 30px;
+}
+
+.logo {
+  width: 80px;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 0 10px #00f3ff);
+}
+
+h1 {
+  color: #fff;
+  font-size: 1.8rem;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+p {
+  color: #94a3b8;
+  margin-top: 5px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 20px;
 }
 
 .input-group {
-  text-align: left;
-  margin-bottom: 15px;
+  display: grid;
+  gap: 8px;
 }
 
-label { 
-  display: block; 
-  margin-bottom: 5px; 
-  font-weight: bold; 
+label {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 4px;
 }
 
 input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-sizing: border-box;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px 18px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
 }
 
-button {
-  width: 100%;
-  padding: 12px;
-  background: #28a745; /* Tu verde original */
-  color: white;
+input:focus {
+  outline: none;
+  border-color: #00f3ff;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.btn-neon {
+  background: #00f3ff;
+  color: #0f172a;
   border: none;
-  border-radius: 6px;
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
-  font-size: 16px;
-  transition: background 0.3s;
-}
-
-button:hover { 
-  background: #218838; 
-}
-
-.error-msg { 
-  color: #dc3545; 
-  margin-top: 15px; 
-  font-size: 14px; 
-}
-
-/* 👇 NUEVOS ESTILOS PARA EL REGISTRO E INVITADO */
-
-.opciones-footer {
-  margin-top: 20px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-  font-size: 14px;
-}
-
-.toggle-text {
-  color: #666;
-  margin-bottom: 15px;
-}
-
-.span-link {
-  color: #28a745;
-  cursor: pointer;
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-.span-link:hover {
-  color: #1e7e34;
-}
-
-.link-invitado {
-  display: inline-block;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-top: 10px;
-  color: #007bff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-neon:hover:not(:disabled) {
+  background: #00d8e4;
+  box-shadow: 0 0 25px rgba(0, 243, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-neon:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.footer-links {
+  text-align: center;
+  margin-top: 25px;
+  display: grid;
+  gap: 15px;
+}
+
+.back-link {
+  color: #64748b;
+  font-size: 0.85rem;
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s;
 }
 
-.link-invitado:hover {
-  text-decoration: underline;
-  color: #0056b3;
+.back-link:hover {
+  color: #94a3b8;
 }
 
-hr {
-  border: 0;
-  border-top: 1px solid #eee;
-  margin: 15px 0;
+.animate-pop {
+  animation: popIn 0.5s cubic-bezier(0.26, 0.53, 0.74, 1.48) forwards;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(15, 23, 42, 0.3);
+  border-radius: 50%;
+  border-top-color: #0f172a;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
