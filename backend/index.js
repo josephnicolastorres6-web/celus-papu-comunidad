@@ -49,7 +49,7 @@ db = mysql.createPool({
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    ssl: { rejectUnauthorized: true }
+    ssl: process.env.DB_HOST?.includes('tidbcloud.com') ? { rejectUnauthorized: true } : false
 });
 
 async function inicializarInfraestructura() {

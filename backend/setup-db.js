@@ -9,7 +9,7 @@ async function setupDatabase() {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     port: process.env.DB_PORT || 3306,
-    ssl: { rejectUnauthorized: true }
+    ssl: process.env.DB_HOST?.includes('tidbcloud.com') ? { rejectUnauthorized: true } : false
   };
 
   const DB_NAME = process.env.DB_NAME || 'celuspapu';
