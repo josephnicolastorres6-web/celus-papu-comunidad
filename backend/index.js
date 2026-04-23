@@ -16,28 +16,28 @@ const SECRET_KEY = process.env.JWT_SECRET || 'cocacola03';
 
 const app = express();
 
-// ==========================================
-// 🚀 CONFIGURACIÓN DE CORS (PERMISOS VERCEL)
-// ==========================================
+// 1. EL ESCUDO CORS DEBE SER LO PRIMERO EN EL CÓDIGO
 app.use(cors({
-  origin: 'https://celus-papu-comunidad.vercel.app',
+  origin: [
+    'https://celus-papu-comunidad.vercel.app', 
+    'http://localhost:4200'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
+// Preflight global seguro
 app.options('*', cors());
 
+// 2. PARSEO DE JSON
 app.use(express.json());
 
-// RUTA DE HEALTH CHECK (Prueba de vida para Railway)
+// 3. RUTA DE SALUD (Health Check para Railway)
 app.get('/', (req, res) => {
     const dbStatus = db ? '🔌 DB Configurada' : '⚠️ DB Pendiente';
-    res.status(200).send(`🚀 API Celus Papu Activa | Estado: ${dbStatus}`);
+    res.status(200).send(`🚀 API Celus Papu - Online | Status: ${dbStatus}`);
 });
-
-// Intentar conectar a la BD de forma asíncrona al iniciar
-conectarDB();
 
 // ==========================================
 // 🚀 PROTOCOLO DE CONEXIÓN DIFERIDA (ANTI-REBOOT)
@@ -578,12 +578,13 @@ app.patch('/pedidos/:id/estado', verificarToken, (req, res) => {
 });
 
 // ==========================================
-// 🚀 INICIO DEL SERVIDOR (AL FINAL)
+// 5. APERTURA DE PUERTO A PRUEBA DE FALLOS
 // ==========================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ SERVIDOR VIVO Y ESCUCHANDO EN PUERTO ${PORT}`);
-    console.log(`📡 URL API: https://celus-papu-comunidad-production.up.railway.app`);
+    console.log(`✅ Servidor escuchando en el puerto ${PORT}`);
+    // Intentar conectar a la BD SOLO DESPUÉS de abrir el puerto
+    conectarDB();
 }).on('error', (err) => {
     console.error('🔥 Error crítico al iniciar el servidor:', err);
 });
