@@ -187,17 +187,17 @@ export class ComentariosComponent implements OnInit {
     this.router.navigate(['/admin-login']);
   }
 
-  calcularTiempo(fechaStr: string | null): string {
-    if (!fechaStr) return 'Offline';
+  calcularTiempo(fecha: any): string {
+    if (!fecha) return 'Desconectado';
     const ahora = new Date();
-    const fecha = new Date(fechaStr);
-    const difMs = ahora.getTime() - fecha.getTime();
-    const difMin = Math.floor(difMs / 60000);
+    const fechaConexion = new Date(fecha);
+    const diferenciaMs = ahora.getTime() - fechaConexion.getTime();
+    const minutos = Math.floor(diferenciaMs / 60000);
     
-    if (difMin < 1) return 'Activo ahora';
-    if (difMin < 60) return `Hace ${difMin} min`;
-    const difHoras = Math.floor(difMin / 60);
-    if (difHoras < 24) return `Hace ${difHoras} h`;
-    return 'Hace mucho';
+    if (minutos < 1) return 'En línea';
+    if (minutos < 60) return `Hace ${minutos} min`;
+    const horas = Math.floor(minutos / 60);
+    if (horas < 24) return `Hace ${horas} h`;
+    return fechaConexion.toLocaleDateString();
   }
 }
