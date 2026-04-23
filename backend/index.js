@@ -579,8 +579,8 @@ const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
 app.listen(PORT, HOST, () => {
-    console.log(`🚀 SERVIDOR VIVO EN PUERTO ${PORT}`);
-    // Intentar conectar a la BD SOLO DESPUÉS de abrir el puerto
+    console.log(`🚀 SERVIDOR VIVO Y ESCUCHANDO EN PUERTO ${PORT}`);
+    console.log('⚡ Arranque inmediato completado. Iniciando conexión DB en segundo plano...');
     conectarDB();
 }).on('error', (err) => {
     console.error('🔥 Error crítico al intentar usar el puerto:', err);
