@@ -126,9 +126,9 @@ async function inicializarInfraestructura() {
 
         // Parches por si las tablas ya existían sin columnas clave (casos de migración)
         const parchesUsuarios = [
-            'username VARCHAR(255) NOT NULL UNIQUE',
-            'email VARCHAR(255) NOT NULL',
-            'password VARCHAR(255) NOT NULL',
+            'username VARCHAR(255)',
+            'email VARCHAR(255)',
+            'password VARCHAR(255)',
             'avatar VARCHAR(255) DEFAULT "/avatar1.png"'
         ];
         for (const col of parchesUsuarios) {
@@ -140,6 +140,14 @@ async function inicializarInfraestructura() {
                     console.error(`⚠️ Error al parchear tabla usuarios (${col}):`, e.sqlMessage || e.message);
                 }
             }
+        }
+        
+        // Parche extra para el índice único en username (TiDB Friendly)
+        try {
+            await pdb.query('ALTER TABLE usuarios ADD UNIQUE INDEX idx_username (username)');
+            console.log('✅ Índice único agregado a username en usuarios.');
+        } catch (e) {
+            // Ignorar si el índice ya existe
         }
 
         const parchesComentarios = [
