@@ -77,13 +77,19 @@ async function inicializarInfraestructura() {
     });
     console.log('🔌 Pool de conexiones principal listo.');
 
-    // PASO 3: Crear tablas y semillas usando el pool
+    // PASO 3: Crear tablas y semillas usando el pool (RESET TOTAL PARA ESTABILIDAD)
     const pdb = db.promise();
     try {
         await pdb.query('SET FOREIGN_KEY_CHECKS = 0');
+        
+        console.log('🧹 Limpiando tablas para reconstrucción de esquema...');
+        await pdb.query('DROP TABLE IF EXISTS comentarios');
+        await pdb.query('DROP TABLE IF EXISTS usuarios');
         await pdb.query('DROP TABLE IF EXISTS administradores');
+        
+        console.log('🏗️ Recreando tabla administradores...');
         await pdb.query(`
-            CREATE TABLE IF NOT EXISTS administradores (
+            CREATE TABLE administradores (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
@@ -92,10 +98,10 @@ async function inicializarInfraestructura() {
                 rol VARCHAR(50) DEFAULT 'admin'
             )
         `);
-        await pdb.query('SET FOREIGN_KEY_CHECKS = 1');
 
+        console.log('🏗️ Recreando tabla usuarios...');
         await pdb.query(`
-            CREATE TABLE IF NOT EXISTS usuarios (
+            CREATE TABLE usuarios (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
                 email VARCHAR(255) NOT NULL,
@@ -108,8 +114,9 @@ async function inicializarInfraestructura() {
             )
         `);
 
+        console.log('🏗️ Recreando tabla comentarios...');
         await pdb.query(`
-            CREATE TABLE IF NOT EXISTS comentarios (
+            CREATE TABLE comentarios (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 admin_id INT NULL,
                 usuario_id INT NULL,
@@ -123,64 +130,12 @@ async function inicializarInfraestructura() {
                 FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
             )
         `);
-
-        // Parches por si las tablas ya existían sin columnas clave (casos de migración)
-        const parchesUsuarios = [
-            'username VARCHAR(255)',
-            'email VARCHAR(255)',
-            'password VARCHAR(255)',
-            'avatar VARCHAR(255) DEFAULT "/avatar1.png"'
-        ];
-        for (const col of parchesUsuarios) {
-            try { 
-                await pdb.query(`ALTER TABLE usuarios ADD COLUMN ${col}`); 
-                console.log(`✅ Columna agregada a usuarios: ${col}`);
-            } catch (e) {
-                if (e.code !== 'ER_DUP_FIELDNAME') {
-                    console.error(`⚠️ Error al parchear tabla usuarios (${col}):`, e.sqlMessage || e.message);
-                }
-            }
-        }
         
-        // Parche extra para el índice único en username (TiDB Friendly)
-        try {
-            await pdb.query('ALTER TABLE usuarios ADD UNIQUE INDEX idx_username (username)');
-            console.log('✅ Índice único agregado a username en usuarios.');
-        } catch (e) {}
+        await pdb.query('SET FOREIGN_KEY_CHECKS = 1');
 
-        // PARCHE CRÍTICO: Asegurar AUTO_INCREMENT en IDs (TiDB Fix)
-        const parchesAutoIncrement = [
-            'ALTER TABLE usuarios MODIFY COLUMN id INT AUTO_INCREMENT',
-            'ALTER TABLE administradores MODIFY COLUMN id INT AUTO_INCREMENT',
-            'ALTER TABLE comentarios MODIFY COLUMN id INT AUTO_INCREMENT'
-        ];
-        for (const patch of parchesAutoIncrement) {
-            try { 
-                await pdb.query(patch); 
-                console.log(`✅ AUTO_INCREMENT verificado/aplicado: ${patch}`);
-            } catch (e) {
-                console.warn(`⚠️ No se pudo aplicar AUTO_INCREMENT (posiblemente ya activo): ${e.message}`);
-            }
-        }
+        await pdb.query('SET FOREIGN_KEY_CHECKS = 1');
 
-        const parchesComentarios = [
-            'admin_id INT NULL', 
-            'usuario_id INT NULL', 
-            'avatar VARCHAR(255)', 
-            'modelo VARCHAR(255)'
-        ];
-        for (const col of parchesComentarios) {
-            try { 
-                await pdb.query(`ALTER TABLE comentarios ADD COLUMN ${col}`); 
-                console.log(`✅ Columna agregada a comentarios: ${col}`);
-            } catch (e) {
-                if (e.code !== 'ER_DUP_FIELDNAME') {
-                    console.error(`⚠️ Error al parchear tabla comentarios (${col}):`, e.sqlMessage || e.message);
-                }
-            }
-        }
-
-        // Admin0 garantizado
+        // PASO 4: Inyectar Admin Supremo garantizado
         const hash = await bcrypt.hash('admin000', 10);
         await pdb.query(
             `INSERT IGNORE INTO administradores (username, password, avatar, es_supremo) VALUES ('admin0', ?, '/logo1.jpg', true)`,
