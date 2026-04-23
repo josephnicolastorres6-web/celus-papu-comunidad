@@ -1,7 +1,7 @@
 <div class="catalogo-container">
   <header class="catalogo-header">
     <h1 class="neon-title">Catálogo de Alta Gama</h1>
-    <button class="btn-back" routerLink="/">Volver a la Comunidad</button>
+    <button class="btn-back" routerLink="/" title="Volver a la vista de comunidad" aria-label="Volver al Inicio">Volver a la Comunidad</button>
   </header>
 
   <div *ngIf="cargando()" class="loader-container">
@@ -13,7 +13,7 @@
       <div class="product-card glass">
         <div class="prod-badge">Premium</div>
         <div class="prod-img-box">
-          <img [src]="prod.imagen_url" [alt]="prod.nombre">
+          <img [src]="prod.imagen_url" [alt]="prod.nombre" onerror="this.src='/logo1.jpg'">
         </div>
         <div class="prod-info">
           <span class="prod-marca">{{ prod.marca }}</span>
@@ -21,7 +21,7 @@
           <p class="prod-specs">{{ prod.especificaciones }}</p>
           <div class="prod-footer">
             <span class="prod-price">${{ prod.precio }}</span>
-            <button class="btn-buy" (click)="agregar(prod)">Añadir al Carrito</button>
+            <button class="btn-buy" (click)="agregar(prod)" title="Comprar este producto" aria-label="Añadir {{ prod.nombre }} al carrito">Añadir al Carrito</button>
           </div>
         </div>
       </div>

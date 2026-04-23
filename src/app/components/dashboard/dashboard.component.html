@@ -119,9 +119,9 @@
           <p class="fecha-txt">Registrado: {{ user.fecha }}</p>
         </div>
         <div class="card-actions">
-          <button class="btn-icon btn-edit" (click)="editarUsuario(user)" title="Editar usuario">✏️</button>
+          <button class="btn-icon btn-edit" (click)="editarUsuario(user)" title="Editar usuario" aria-label="Editar usuario papu">✏️</button>
           <button class="btn-icon btn-delete" (click)="eliminarUsuario(user.id, user.nombre)"
-            title="Eliminar usuario">🗑️</button>
+            title="Eliminar usuario" aria-label="Eliminar usuario permanentemente">🗑️</button>
         </div>
       </div>
       } @empty {
@@ -133,7 +133,7 @@
   </main>
 
   <!-- Botón Añadir (FAB) -->
-  <button class="fab-neon" (click)="abrirModal()" title="Crea un nuevo usuario">
+  <button class="fab-neon" (click)="abrirModal()" title="Crea un nuevo usuario" aria-label="Agregar nuevo miembro">
     <span class="fab-icon">+</span>
   </button>
 

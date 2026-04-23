@@ -64,8 +64,8 @@
     <section class="muro-feed" *ngIf="authService.isAdmin() || authService.estaLogueadoCliente()">
       <div class="feed-header">
         <h1>{{ authService.isAdmin() ? 'Muro Global de Mensajes' : 'Mis Mensajes' }}</h1>
-        <button *ngIf="authService.estaLogueadoCliente()" class="btn-plus" (click)="showNuevoMensajeModal.set(true)">+ Nuevo Mensaje</button>
-        <button *ngIf="authService.isAdmin()" class="btn-plus neon-green" (click)="showNuevoMensajeModal.set(true)">📢 Aviso Oficial</button>
+        <button *ngIf="authService.estaLogueadoCliente()" class="btn-plus" (click)="showNuevoMensajeModal.set(true)" title="Redactar nuevo mensaje" aria-label="Nuevo mensaje">+ Nuevo Mensaje</button>
+        <button *ngIf="authService.isAdmin()" class="btn-plus neon-green" (click)="showNuevoMensajeModal.set(true)" title="Publicar anuncio global" aria-label="Publicar Aviso Oficial">📢 Aviso Oficial</button>
       </div>
 
       <div *ngIf="cargando()" class="loader-container">
