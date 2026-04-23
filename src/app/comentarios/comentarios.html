@@ -1,7 +1,7 @@
 <div class="dashboard-wrapper">
   
   <!-- BARRA LATERAL (SIDEBAR) -->
-  <aside class="sidebar-miembros">
+  <aside class="sidebar-miembros" *ngIf="authService.isAdmin() || authService.estaLogueadoCliente()">
     <div class="sidebar-header">
       <img src="/logo1.jpg" alt="Logo" class="logo-mini">
       <h3>Comunidad</h3>
@@ -25,7 +25,7 @@
   </aside>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <main class="content-muro">
+  <main class="content-muro" [style.grid-column]="(authService.isAdmin() || authService.estaLogueadoCliente()) ? 'auto' : '1 / -1'">
     
     <!-- HEADER DINÁMICO -->
     <header class="main-header glass">
@@ -49,12 +49,19 @@
           <button class="btn-action" (click)="showPerfilModal.set(true)">Mi Perfil</button>
         </ng-container>
 
-        <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+        <!-- BOTONES INVITADO (NO LOGUEADO) -->
+        <ng-container *ngIf="!authService.isAdmin() && !authService.estaLogueadoCliente()">
+          <button class="btn-action neon-cyan" routerLink="/login-cliente">Iniciar Sesión</button>
+          <button class="btn-action" routerLink="/login">Iniciar Sesión Admin</button>
+        </ng-container>
+
+        <!-- CERRAR SESIÓN -->
+        <button *ngIf="authService.isAdmin() || authService.estaLogueadoCliente()" class="btn-logout" (click)="logout()">Cerrar Sesión</button>
       </div>
     </header>
 
     <!-- FEED DE MENSAJES (ESTILO TAREAS) -->
-    <section class="muro-feed">
+    <section class="muro-feed" *ngIf="authService.isAdmin() || authService.estaLogueadoCliente()">
       <div class="feed-header">
         <h1>{{ authService.isAdmin() ? 'Muro Global de Mensajes' : 'Mis Mensajes' }}</h1>
         <button *ngIf="authService.estaLogueadoCliente()" class="btn-plus" (click)="showNuevoMensajeModal.set(true)">+ Nuevo Mensaje</button>
@@ -94,6 +101,14 @@
             </div>
           </div>
         }
+      </div>
+    </section>
+
+    <!-- PANTALLA INVITADO -->
+    <section class="muro-feed welcome-screen" *ngIf="!authService.isAdmin() && !authService.estaLogueadoCliente()">
+      <div style="text-align: center; margin-top: 10vh;">
+        <h1 class="neon-title" style="font-size: 3.5rem; margin-bottom: 20px; text-shadow: 0 0 20px var(--neon-cyan);">Bienvenido VIP</h1>
+        <p style="color: #cbd5e1; font-size: 1.2rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">Por favor, inicia sesión para acceder a la comunidad y consultar nuestros equipos Alta Gama.</p>
       </div>
     </section>
 

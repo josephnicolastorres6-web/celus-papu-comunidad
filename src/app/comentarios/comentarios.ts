@@ -102,6 +102,11 @@ export class ComentariosComponent implements OnInit {
     this.cargando.set(true);
     const token = localStorage.getItem('token_cliente') || localStorage.getItem('token');
     
+    if (!token) {
+      this.cargando.set(false);
+      return;
+    }
+
     this.http.get<ResenaFeed[]>(`${environment.apiUrl}/comentarios`, {
       headers: { Authorization: `Bearer ${token}` }
     }).subscribe({
