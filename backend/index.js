@@ -17,31 +17,15 @@ const SECRET_KEY = process.env.JWT_SECRET || 'cocacola03';
 const app = express();
 
 // ==========================================
-// 1. CONFIGURACIÓN DE CORS (PRIMERA PRIORIDAD ABSOLUTA)
+// 🚀 OPCIÓN NUCLEAR: CONFIGURACIÓN DE CORS GLOBAL
 // ==========================================
-app.use((req, res, next) => {
-  try {
-    const origin = req.headers.origin;
-    const allowedOrigins = ['https://celus-papu-comunidad.vercel.app', 'http://localhost:4200'];
-    
-    if (allowedOrigins.includes(origin)) {
-      res.header('Access-Control-Allow-Origin', origin);
-    }
-    
-    res.header('Access-Control-Allow-Headers', 'Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.header('Allow', 'GET, POST, OPTIONS, PUT, DELETE');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    
-    if (req.method === 'OPTIONS') {
-      return res.sendStatus(200);
-    }
-    next();
-  } catch (error) {
-    console.error('Fallo en middleware CORS:', error);
-    res.status(500).json({ error: 'Error crítico de seguridad en la comunicación' });
-  }
-});
+// Colocado en la cima absoluta para interceptar peticiones de Vercel/Localhost
+app.use(cors({
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  credentials: true
+}));
 
 app.use(express.json());
 
