@@ -18,13 +18,9 @@ const app = express();
 
 // 1. EL ESCUDO CORS DEBE SER LO PRIMERO EN EL CÓDIGO
 app.use(cors({
-  origin: [
-    'https://celus-papu-comunidad.vercel.app', 
-    'http://localhost:4200'
-  ],
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // 2. PARSEO DE JSON
