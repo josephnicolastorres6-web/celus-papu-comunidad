@@ -33,34 +33,56 @@ app.get('/', (req, res) => {
 });
 
 // ==========================================
-// 🚀 PROTOCOLO AUTO-HEALING (TiDB Cloud)
+// 🚀 PROTOCOLO AUTO-HEALING ROBUSTO
 // ==========================================
-// El pool (db) se crea DENTRO de inicializarInfraestructura(), después de garantizar que la DB existe
 let db;
 
 async function inicializarInfraestructura() {
     const DB_NAME = process.env.DB_NAME || 'celuspapu';
-    console.log(`\ud83c\udfd7\ufe0f Iniciando Auto-Healing para base de datos: ${DB_NAME}`);
-    
-    // PASO 1: Conexión temporal SIN especificar DB para poder crearla
-    const mysql2p = require('mysql2/promise');
-    const tempConn = await mysql2p.createConnection({
+    console.log('🏗️ Iniciando Auto-Healing para BD:', DB_NAME);
+
+    const connConfig = {
         host: process.env.DB_HOST || 'localhost',
         user: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || '',
-        port: process.env.DB_PORT || 3306,
-        ssl: process.env.DB_HOST?.includes('tidbcloud.com') ? { rejectUnauthorized: true } : false
-    });
+        port: parseInt(process.env.DB_PORT) || 3306
+    };
+    // SSL solo para TiDB Cloud
+    if (process.env.DB_HOST?.includes('tidbcloud.com')) {
+        connConfig.ssl = { rejectUnauthorized: true };
+    }
 
+    const mysql2p = require('mysql2/promise');
+
+    // PASO 1: Crear la BD si no existe (conexión sin DB)
     try {
+        const tempConn = await mysql2p.createConnection(connConfig);
         await tempConn.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``);
-        await tempConn.query(`USE \`${DB_NAME}\``);
-        console.log(`\u2705 Base de datos '${DB_NAME}' lista.`);
+        console.log('✅ BD', DB_NAME, 'verificada/creada.');
+        await tempConn.end();
+    } catch (e) {
+        // En TiDB Cloud a veces la BD ya existe y no necesita crearse
+        if (e.code !== 'ER_DB_CREATE_EXISTS') {
+            console.warn('⚠️ No se pudo crear la BD (puede que ya exista o sin permisos):', e.message);
+        }
+    }
 
-        // PASO 2: Crear/verificar tablas en la conexión temporal
-        await tempConn.query('SET FOREIGN_KEY_CHECKS = 0');
-        await tempConn.query('DROP TABLE IF EXISTS administradores');
-        await tempConn.query(`
+    // PASO 2: Crear el pool apuntando ya a la BD
+    db = require('mysql2').createPool({
+        ...connConfig,
+        database: DB_NAME,
+        waitForConnections: true,
+        connectionLimit: 10,
+        queueLimit: 0
+    });
+    console.log('🔌 Pool de conexiones principal listo.');
+
+    // PASO 3: Crear tablas y semillas usando el pool
+    const pdb = db.promise();
+    try {
+        await pdb.query('SET FOREIGN_KEY_CHECKS = 0');
+        await pdb.query('DROP TABLE IF EXISTS administradores');
+        await pdb.query(`
             CREATE TABLE IF NOT EXISTS administradores (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
@@ -70,9 +92,9 @@ async function inicializarInfraestructura() {
                 rol VARCHAR(50) DEFAULT 'admin'
             )
         `);
-        await tempConn.query('SET FOREIGN_KEY_CHECKS = 1');
+        await pdb.query('SET FOREIGN_KEY_CHECKS = 1');
 
-        await tempConn.query(`
+        await pdb.query(`
             CREATE TABLE IF NOT EXISTS usuarios (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(255) NOT NULL UNIQUE,
@@ -86,7 +108,7 @@ async function inicializarInfraestructura() {
             )
         `);
 
-        await tempConn.query(`
+        await pdb.query(`
             CREATE TABLE IF NOT EXISTS comentarios (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 admin_id INT NULL,
@@ -102,43 +124,21 @@ async function inicializarInfraestructura() {
             )
         `);
 
-        // PASO 3: Parches de columnas para tablas que ya existen sin ellas
-        const patches = [
-            'ALTER TABLE comentarios ADD COLUMN admin_id INT NULL',
-            'ALTER TABLE comentarios ADD COLUMN usuario_id INT NULL',
-            'ALTER TABLE comentarios ADD COLUMN avatar VARCHAR(255)',
-            'ALTER TABLE comentarios ADD COLUMN modelo VARCHAR(255)'
-        ];
-        for (const patch of patches) {
-            try { await tempConn.query(patch); }
-            catch (e) { /* columna ya existe, se ignora */ }
+        // Parches por si la tabla comentarios ya existía sin columnas
+        for (const col of ['admin_id INT NULL', 'usuario_id INT NULL', 'avatar VARCHAR(255)', 'modelo VARCHAR(255)']) {
+            try { await pdb.query(`ALTER TABLE comentarios ADD COLUMN ${col}`); } catch (e) {}
         }
 
-        // PASO 4: Inyectar Admin0
+        // Admin0 garantizado
         const hash = await bcrypt.hash('admin000', 10);
-        await tempConn.query(
+        await pdb.query(
             `INSERT IGNORE INTO administradores (username, password, avatar, es_supremo) VALUES ('admin0', ?, '/logo1.jpg', true)`,
             [hash]
         );
-
-        console.log('\u2705 Infraestructura lista. Admin0 garantizado.');
-    } finally {
-        await tempConn.end();
+        console.log('✅ Infraestructura lista. Admin0 garantizado.');
+    } catch (e) {
+        console.error('🔥 Error en creación de tablas (el servidor sigue activo):', e.message);
     }
-
-    // PASO 5: Ahora sí creamos el pool principal (la DB ya existe)
-    db = require('mysql2').createPool({
-        host: process.env.DB_HOST || 'localhost',
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
-        database: DB_NAME,
-        port: process.env.DB_PORT || 3306,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0,
-        ssl: process.env.DB_HOST?.includes('tidbcloud.com') ? { rejectUnauthorized: true } : false
-    });
-    console.log('\ud83d\udd0c Pool de conexiones principal listo.');
 }
 
 // ==========================================
